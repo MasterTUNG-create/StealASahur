@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sas-build="3.2.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
+<html lang="en" data-sas-build="3.4.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -23,7 +23,7 @@ button.g{background:#ffffff25;color:#fff}button:disabled{opacity:.4;pointer-even
 #adm{max-height:80vh;overflow:auto;position:absolute;right:12px;top:70px;display:none;pointer-events:auto;background:#000c;border:2px solid gold;border-radius:14px;padding:12px;width:230px}
 #adm *{width:100%;margin:3px 0}
 </style></head><body>
-<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 3.2.0</p>
+<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 3.4.0</p>
 <input id="u" placeholder="Username" maxlength="16"><input id="em" type="email" placeholder="Email (to register)"><input id="p" type="password" placeholder="Password"><label style="font-size:15px"><input type="checkbox" id="rob" style="width:auto"> I'm not a robot: <b id="q"></b> = <input id="qa" style="width:56px;padding:4px"></label>
 <div><button onclick="auth(0)">Log in</button><button class="g" onclick="auth(1)">Register</button></div><p id="am" style="color:#ff8080"></p></div></div>
 <div id="menu" class="pn" style="display:none"><div class="card" style="width:min(780px,94vw)"><h1>Pick a server</h1><p id="wl"></p><p id="sb" style="color:#ffd34d"></p>
@@ -1344,50 +1344,21 @@ const help=document.createElement('small');help.style.cssText='opacity:.8;max-wi
 
 <!-- ADMIN PANEL ACCESS REPAIR: Supabase profiles.role remains the authority. -->
 <script id="SAS_ADMIN_PANEL_ACCESS_REPAIR">
-(()=>{
- 'use strict';
+(()=>{'use strict';
+ // This compatibility layer only keeps the legacy admin dock visibility in sync.
+ // It intentionally does NOT register a P-key or dock-click handler: v3.4 owns both.
  const isAdminNow=()=>{
-   if(typeof acc==='undefined'||!acc||typeof data==='undefined'||!data)return false;
-   // Normalize the role supplied by the authenticated Supabase profile.
-   data.status=String(data.status||'player').trim().toLowerCase();
-   return typeof isAdm==='function' ? !!isAdm() : String(data.status)==='admin';
+   try{return !!(typeof isAdm==='function'&&isAdm()) || String(data?.status||acc?.d?.status||'').toLowerCase()==='admin'}catch{return false}
  };
  const dock=document.getElementById('sasAdminDock');
- const panel=document.getElementById('sasAdminPanel');
  const sync=()=>{
    const allowed=isAdminNow()&&typeof G!=='undefined'&&!!G;
-   if(dock){
-     dock.style.setProperty('display',allowed?'block':'none','important');
-     dock.style.setProperty('visibility',allowed?'visible':'hidden','important');
-     dock.style.setProperty('z-index','10000','important');
-     const b=dock.querySelector('button');
-     if(b){b.textContent='👑 OPEN ADMIN PANEL';b.style.pointerEvents='auto'}
-   }
+   if(!dock)return;
+   dock.style.setProperty('display',allowed?'block':'none','important');
+   dock.style.setProperty('visibility',allowed?'visible':'hidden','important');
+   dock.style.setProperty('z-index','199999','important');
  };
- const open=()=>{
-   if(!isAdminNow()){if(typeof window.toast==='function')window.toast('Admin access requires admin role in your Supabase profile');return}
-   if(typeof G==='undefined'||!G){if(typeof window.toast==='function')window.toast('Join a server first');return}
-   if(panel){
-     const closing=panel.classList.contains('show');
-     panel.classList.toggle('show',!closing);
-     panel.style.display=closing?'none':'flex';
-     panel.style.zIndex='10001';
-     if(!closing)setTimeout(()=>document.getElementById('sasAllCommandsTab')?.click(),0);
-   } else if(typeof window.toast==='function')window.toast('Admin panel failed to initialize. Reload the game.');
- };
- if(dock){
-   const b=dock.querySelector('button');
-   if(b)b.addEventListener('click',e=>{e.preventDefault();open()},true);
- }
- // P opens the current Admin Abuse panel directly (not the obsolete legacy panel).
- document.addEventListener('keydown',e=>{
-   if(e.code!=='KeyP'||e.repeat||e.target?.matches?.('input,textarea,select,[contenteditable="true"]'))return;
-   if(!isAdminNow())return;
-   e.preventDefault();e.stopImmediatePropagation();open();
- },true);
- // Keep the dock correct after Supabase auto-login, normal login, and server joins.
- sync();
- setInterval(sync,350);
+ sync();setInterval(sync,700);
 })();
 </script>
 <script id="SAS_V251">
@@ -1722,7 +1693,7 @@ addEventListener('keydown',hnd,true);addEventListener('click',hnd,true);
  b.onclick=()=>{others.forEach(x=>x.classList.remove('active'));b.classList.add('active');P.querySelectorAll('[data-page],#sasModPage').forEach(p=>p.style.display='none');pg.style.display='block'};
  others.forEach(x=>x.addEventListener('click',()=>{b.classList.remove('active');pg.style.display='none'}))})();
 window.SASNET={H,send,vAdm,ann,rem,uid,isHost,pres:()=>pres,invNow,isVerifiedAdmin:id=>!!verOk[id],verifyAdmin:vAdm,roomKey:()=>String(R?.topic||"sas-room"),setLuck:(m,min)=>{ev={m:Math.min(1e6,Math.max(1,m)),until:Date.now()+min*6e4}},inRoom:()=>!!R};
-const ap=document.querySelector('#auth p');if(ap)ap.textContent='STEAL A SAHUR V 2.9.0 · ONLINE';
+const ap=document.querySelector('#auth p');if(ap)ap.textContent='STEAL A SAHUR V 3.4.0 · ONLINE';
 })();
 </script>
 <script id="SAS_ONLINE_V27">
@@ -2262,7 +2233,7 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
 <script id="SAS_V32_ADMIN_PANEL_REPAIR">
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
- const isAdmin=()=>{try{return typeof isAdm==='function'&&!!isAdm()}catch{return false}};
+ const isAdmin=()=>{try{return !!((typeof isAdm==='function'&&isAdm())||String(data?.status||acc?.d?.status||'').trim().toLowerCase()==='admin')}catch{return false}};
  const panel=$('sasAdminPanel'),dock=$('sasAdminDock');
  // Ensure there is exactly one visible admin entry point. Clone the dock button to
  // remove the conflicting older capture/property click handlers.
@@ -2383,7 +2354,7 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
  const panel=$('sasAdminPanel'),dock=$('sasAdminDock');
- const isAdmin=()=>{try{return typeof isAdm==='function'&&!!isAdm()}catch{return false}};
+ const isAdmin=()=>{try{return !!((typeof isAdm==='function'&&isAdm())||String(data?.status||acc?.d?.status||'').trim().toLowerCase()==='admin')}catch{return false}};
  const notify=m=>{if(typeof window.toast==='function')window.toast(m);else console.info(m)};
  if(!panel||!dock){console.error('SAS v3.3: admin panel shell missing');return}
  const card=panel.querySelector('.sasx-card');if(!card){console.error('SAS v3.3: admin panel card missing');return}
@@ -2413,25 +2384,29 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  `;
  card.appendChild(root);
  const commandRows=[
-  ['cash #username 1000000','Economy','Give cash to an online or offline player.'],
-  ['give #username "Sahur Name"','Economy','Give a selected Sahur to an online or offline player.'],
+  ['givecash #username 1000000','Economy','Give cash to an online or offline player.'],
+  ['givemoney #username 1000000','Economy','Alias for giving cash.'],
+  ['cash #username 1000000','Economy','Short alias for giving cash.'],
+  ['givesahur #username SahurName','Economy','Give a Sahur by catalog name or numeric ID.'],
+  ['give #username SahurName','Economy','Short alias for giving a Sahur.'],
   ['giveall cash 1000000','Economy','Give cash to everyone currently in this server.'],
-  ['giveall sahur "Sahur Name"','Economy','Give the selected Sahur to everyone in this server.'],
+  ['giveall sahur SahurName','Economy','Give a Sahur to everyone currently in this server.'],
   ['ban #username 60 reason','Moderation','Ban for minutes; use 0 for a permanent ban.'],
   ['unban #username','Moderation','Remove a ban.'],
-  ['terminate #username','Moderation','Permanently delete the account after confirmation.'],
+  ['terminate #username','Moderation','Permanently delete an account after confirmation.'],
   ['kick #username reason','Moderation','Kick one player from this server.'],
   ['kickall reason','Moderation','Kick non-admin players from this server.'],
   ['clearbrainrots','Inventory','Clear your own base.'],
   ['clearbrainrots #username','Inventory','Clear another player’s saved Sahurs.'],
-  ['clearworld','World','Clear Sahurs from the conveyor in this server.'],
+  ['clearworld','World','Clear conveyor Sahurs in this server.'],
   ['event bloodmoon 5','Events','Start Blood Moon for five minutes.'],
-  ['event fire 5','Events','Start Fire event for five minutes.'],
-  ['event ice 5','Events','Start Ice event for five minutes.'],
+  ['event fire 5','Events','Start Fire for five minutes.'],
+  ['event ice 5','Events','Start Ice for five minutes.'],
   ['event abuse 5','Events','Start Admin Abuse for five minutes.'],
   ['event stop','Events','Stop the active event.'],
   ['luck 10 10','Events','Set 10× server spawn luck for ten minutes.'],
-  ['spawn 12','World','Request Sahur ID 12 on the conveyor.'],
+  ['srvluck 10 10','Events','Alias for timed server luck.'],
+  ['spawn 12','World','Request a catalog Sahur ID on the conveyor.'],
   ['spawnrandom 5','World','Request five random conveyor Sahurs.'],
   ['rain 1000000','World','Drop claimable cash around your character.'],
   ['boom 25','World','Create a knockback pulse around your character.'],
@@ -2439,12 +2414,13 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
   ['gannounce Message here','Server','Send a global announcement.'],
   ['players','Server','List players in the current server.'],
   ['serverinfo','Server','Show current server information.'],
-  ['info #username','Players','Show player level and base information.'],
-  ['smite #username','Players','Apply the short stun effect to a player.'],
+  ['info #username','Players','Show a player’s level and base information.'],
+  ['smite #username','Players','Apply the existing short stun effect to a player.'],
   ['freeze #username 5','Players','Freeze a player for five seconds.'],
   ['bring #username','Players','Bring a player to your position.'],
-  ['goto #username','Players','Move your character to a player.'],
-  ['trade #username','Players','Open the existing player-to-player trade flow.']
+  ['goto #username','Players','Move to a player in this server.'],
+  ['trade #username','Trading','Open the existing player-to-player trade flow.'],
+  ['help','Help','Show the in-game admin command summary.']
  ];
  const input=$('v33Command'),status=$('v33CommandStatus');
  function showStatus(id,msg){const e=$(id);if(e)e.textContent=msg}
@@ -2495,7 +2471,7 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  $('v33RainBtn').onclick=()=>dispatch('rain '+Math.max(1,+$('v33Rain').value||1000000),'v33EventStatus');
  $('v33BoomBtn').onclick=()=>dispatch('boom '+Math.max(1,Math.min(100,+$('v33BoomRadius').value||25)),'v33EventStatus');
  function closePanel(){panel.classList.remove('show');panel.style.setProperty('display','none','important')}
- function openPanel(){if(!isAdmin()){notify('Admin access requires the Supabase admin role.');return}if(typeof G==='undefined'||!G){notify('Join a server first.');return}panel.classList.add('show');panel.style.setProperty('display','flex','important');goTab('home');syncStats()}
+ function openPanel(){if(!isAdmin()){notify('Admin access requires the Supabase admin role.');return}panel.classList.add('show');panel.style.setProperty('display','flex','important');goTab('home');syncStats()}
  function togglePanel(){if(panel.classList.contains('show'))closePanel();else openPanel()}
  // Replace the dock node so old click handlers cannot toggle the panel twice.
  const oldButton=dock.querySelector('button');if(oldButton){const b=oldButton.cloneNode(true);b.textContent='👑 ADMIN · P';oldButton.replaceWith(b);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();togglePanel()})}
@@ -2521,3 +2497,89 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
 </script>
 
 </body></html>
+
+
+<!-- SAS v3.4: P-panel key ownership, command aliases, rare verified-admin arrival spectacle -->
+<style id="SAS_V34_ARRIVAL_CSS">
+#sasAdminPanel.show{display:flex!important;visibility:visible!important;opacity:1!important}
+#sasAdminPanel .sasx-card{visibility:visible!important}
+#sasAdminDock{pointer-events:auto!important}
+#sasAdminDock button{pointer-events:auto!important;position:relative;z-index:1}
+#sasAdminPanel .v33-page{min-height:0}
+#sasV33Root{max-height:calc(100dvh - 30px);overflow:auto;overscroll-behavior:contain}
+#sasAdminPanel .sasx-card{max-height:calc(100dvh - 24px)!important;overflow:auto!important}
+#sasAdminPanel.show #sasV33Root{display:flex!important}
+#sasAdminPanel .sasx-card>:not(#sasV33Root){display:none!important}
+#sasAdminArrival{position:fixed;inset:0;z-index:400000;display:none;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(circle at 50% 45%,#4b1b6e66,transparent 55%)}
+#sasAdminArrival.show{display:flex;animation:sasArrivalFade 7s ease forwards}
+#sasAdminArrival .sasArrivalCard{width:min(900px,94vw);padding:clamp(22px,5vw,56px);border:2px solid #ffeaa0;border-radius:28px;text-align:center;background:linear-gradient(145deg,#251044f2,#07152af2 65%,#351044f2);box-shadow:0 0 22px #ffe27a,0 0 65px #a855f7,0 0 130px #ec4899;animation:sasArrivalPop .75s cubic-bezier(.16,1.4,.3,1)}
+#sasAdminArrival .sasArrivalTitle{font-size:clamp(30px,6vw,68px);font-weight:1000;line-height:1.05;color:#fff5b8;text-shadow:0 0 9px #fff,0 0 22px #ffd84d,0 0 48px #ff8a00;letter-spacing:.02em}
+#sasAdminArrival .sasArrivalSub{margin-top:16px;font-size:clamp(17px,3vw,30px);font-weight:900;color:#d8f6ff;text-shadow:0 0 15px #38bdf8}
+#sasAdminArrival .sasArrivalName{margin-top:10px;font-size:clamp(20px,3.5vw,38px);color:#fff;font-weight:900;text-shadow:0 0 15px #c084fc}
+#sasAdminFireworks{position:fixed;inset:0;width:100%;height:100%;z-index:399999;pointer-events:none;display:none}
+#sasAdminFireworks.show{display:block}
+@keyframes sasArrivalPop{0%{transform:scale(.25) rotate(-5deg);opacity:0}65%{transform:scale(1.06) rotate(1deg);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes sasArrivalFade{0%,82%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#sasAdminArrival.show .sasArrivalCard{animation:none}}
+</style>
+<script id="SAS_V34_PANEL_AND_ADMIN_ARRIVAL">
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const panel=$('sasAdminPanel'),dock=$('sasAdminDock');
+ const admin=()=>{try{return !!((typeof isAdm==='function'&&isAdm())||String(data?.status||acc?.d?.status||'').trim().toLowerCase()==='admin')}catch{return false}};
+ const notify=m=>{try{if(typeof toast==='function')toast(m);else console.info(m)}catch{console.info(m)}};
+ if(!panel||!dock){console.error('SAS v3.4: admin panel shell missing');return}
+ // Take sole ownership of P. Earlier compatibility scripts no longer capture it.
+ window.addEventListener('keydown',e=>{
+   if(e.code==='KeyP'&&!e.repeat&&!e.target?.matches?.('input,textarea,select,[contenteditable="true"]')){
+     e.preventDefault();e.stopImmediatePropagation();
+     if(!admin()){notify('Admin access requires the AdminTung admin role.');return}
+     const open=!panel.classList.contains('show');
+     panel.classList.toggle('show',open);
+     panel.style.setProperty('display',open?'flex':'none','important');
+     panel.style.setProperty('visibility',open?'visible':'hidden','important');
+     if(open){const first=$('sasV33Root')?.querySelector('[data-v33tab="home"]');first?.click();}
+   }
+   if(e.key==='Escape'&&panel.classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();panel.classList.remove('show');panel.style.setProperty('display','none','important')}
+ },true);
+ // Dock click is also wired once, replacing all legacy inline/property handlers.
+ const old=dock.querySelector('button');
+ if(old){const b=old.cloneNode(true);b.textContent='👑 ADMIN · P';old.replaceWith(b);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!admin())return notify('Admin only');const open=!panel.classList.contains('show');panel.classList.toggle('show',open);panel.style.setProperty('display',open?'flex':'none','important');panel.style.setProperty('visibility',open?'visible':'hidden','important')})}
+ const sync=()=>{const allowed=admin()&&typeof G!=='undefined'&&!!G;dock.style.setProperty('display',allowed?'block':'none','important');dock.style.setProperty('visibility',allowed?'visible':'hidden','important')};sync();setInterval(sync,700);
+ // Legacy in-game P panel is permanently retired.
+ const mini=$('adm');if(mini){mini.style.setProperty('display','none','important');mini.setAttribute('aria-hidden','true')}
+ // Server command directory: aliases that the original dispatcher didn't normalize are mapped here.
+ const oldRun=window.sasRunAdminCommand;
+ window.sasRunAdminCommand=function(raw){
+   const s=String(raw||'').trim().replace(/^\/+/, '');
+   let m;
+   if((m=s.match(/^givecash\s+(.+)$/i)))return oldRun('/cash '+m[1]);
+   if((m=s.match(/^givemoney\s+(.+)$/i)))return oldRun('/cash '+m[1]);
+   if((m=s.match(/^givesahur\s+(.+)$/i)))return oldRun('/give '+m[1]);
+   if((m=s.match(/^srvluck\s+(.+)$/i)))return oldRun('/luck '+m[1]);
+   return typeof oldRun==='function'?oldRun(raw):0;
+ };
+ // Rare admin arrival: only a newly joined, Supabase-role-verified admin triggers it,
+ // once per admin per browser session. Presence claims alone are never trusted.
+ const canvas=document.createElement('canvas');canvas.id='sasAdminFireworks';document.body.appendChild(canvas);
+ const popup=document.createElement('div');popup.id='sasAdminArrival';popup.innerHTML='<div class="sasArrivalCard"><div class="sasArrivalTitle">👑 ADMIN HAS ENTERED!</div><div class="sasArrivalName" id="sasArrivalName"></div><div class="sasArrivalSub">✨ 10× BOOSTED LUCK IS NOW ACTIVE ✨</div></div>';document.body.appendChild(popup);
+ const ctx=canvas.getContext('2d');let particles=[],raf=0,fireUntil=0;
+ function resize(){canvas.width=Math.max(1,innerWidth*devicePixelRatio);canvas.height=Math.max(1,innerHeight*devicePixelRatio);ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}resize();addEventListener('resize',resize);
+ function burst(x,y){const colors=['#fff4a3','#ffd34d','#ff8a3d','#f472b6','#a78bfa','#67e8f9'];for(let i=0;i<75;i++){const a=Math.random()*Math.PI*2,v=1.5+Math.random()*5;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:55+Math.random()*35,c:colors[Math.random()*colors.length|0],r:1+Math.random()*2.5})}}
+ function animate(){if(!ctx)return;ctx.clearRect(0,0,innerWidth,innerHeight);if(Date.now()<fireUntil&&Math.random()<.16)burst(40+Math.random()*(innerWidth-80),30+Math.random()*innerHeight*.55);for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.045;p.vx*=.992;p.life--;ctx.globalAlpha=Math.max(0,p.life/80);ctx.fillStyle=p.c;ctx.shadowColor=p.c;ctx.shadowBlur=14;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();if(p.life<=0)particles.splice(i,1)}ctx.globalAlpha=1;ctx.shadowBlur=0;if(Date.now()<fireUntil||particles.length){raf=requestAnimationFrame(animate)}else{ctx.clearRect(0,0,innerWidth,innerHeight);canvas.classList.remove('show');raf=0}}
+ let audio=null;const unlock=()=>{try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume()}catch{}};addEventListener('pointerdown',unlock,{once:true});addEventListener('keydown',unlock,{once:true});
+ function boomSound(){try{unlock();if(!audio||audio.state!=='running')return;const t=audio.currentTime;const o=audio.createOscillator(),g=audio.createGain();o.type='sawtooth';o.frequency.setValueAtTime(105,t);o.frequency.exponentialRampToValueAtTime(32,t+.65);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.32,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+.75);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+.76);for(let j=0;j<3;j++){const q=audio.createOscillator(),v=audio.createGain();q.type='triangle';q.frequency.setValueAtTime(700+j*180,t+.12+j*.11);q.frequency.exponentialRampToValueAtTime(120,t+.6+j*.11);v.gain.setValueAtTime(.0001,t+.12+j*.11);v.gain.exponentialRampToValueAtTime(.13,t+.15+j*.11);v.gain.exponentialRampToValueAtTime(.0001,t+.7+j*.11);q.connect(v);v.connect(audio.destination);q.start(t+.12+j*.11);q.stop(t+.72+j*.11)}}catch(e){console.warn('Admin arrival audio unavailable',e)}}
+ const seen=new Set(),roomKey=()=>{try{return String(window.SASNET?.roomKey?.()||'')}catch{return ''}};let lastRoom='',initialized=false;
+ function showArrival(name,id){if(seen.has(id))return;seen.add(id);$('sasArrivalName').textContent=String(name||'Administrator').replace(/\s+\[ADMIN\]$/,'');popup.classList.remove('show');void popup.offsetWidth;popup.classList.add('show');canvas.classList.add('show');fireUntil=Date.now()+6500;burst(innerWidth*.2,innerHeight*.24);burst(innerWidth*.8,innerHeight*.24);burst(innerWidth*.5,innerHeight*.12);if(!raf)animate();boomSound();setTimeout(()=>popup.classList.remove('show'),6800)}
+ setInterval(()=>{
+   const net=window.SASNET;if(!net||!net.inRoom?.())return;
+   const rk=roomKey();if(rk!==lastRoom){lastRoom=rk;initialized=false;}
+   const people=net.pres?.()||{};
+   if(!initialized){for(const id of Object.keys(people)){const key=rk+':'+id;if(id===net.uid?.())continue;if(net.isVerifiedAdmin?.(id)){if(Math.random()<0.15)showArrival(people[id]?.n||'Admin',key);else seen.add(key)}}initialized=true;return}
+   for(const id of Object.keys(people)){
+     const key=rk+':'+id;if(seen.has(key)||id===net.uid?.())continue;
+     if(net.isVerifiedAdmin?.(id)){seen.add(key);showArrival(people[id]?.n||'Admin',key)}
+   }
+ },900);
+})();
+</script>
