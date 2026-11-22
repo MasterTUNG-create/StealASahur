@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sas-build="1.3.0-admin-abuse-2026-11-21"><head><meta charset="utf-8"><title>Steal a Sahur</title>
+<html lang="en" data-sas-build="2.7.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -1456,7 +1456,7 @@ let billMat;const bill=()=>{if(!billMat){const c=document.createElement('canvas'
 const flY=()=>{const m=ag[0];return[0,8,16][m.floor||(m.up?1:0)]||0};
 function makeDrop(o,bc){if(!G||!ag[0])return;const me=ag[0],p=me.m.position,g=new THREE.Group(),kind=o.kind==='gift'?'box':o.kind;let lid=null,v=o.v;
  if(kind==='box'&&!LOOT[v])v='gold';
- const id=o.id||(uid()||'l')+'-'+Date.now()+'-'+(dseq++),f=me.m.rotation.y,x=o.x??p.x+Math.sin(f)*2.4,z=o.z??p.z+Math.cos(f)*2.4,y=o.y??flY();
+ const id=o.id||(uid()||'l')+'-'+Date.now()+'-'+(dseq++),f=me.m.rotation.y,x=o.x??p.x,z=o.z??p.z,y=o.y??flY();
  let L;
  if(kind==='cash'){const n=cl(Math.round(10+Math.log10(v+1)*6),12,80);for(let i=0;i<n;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.2,.04,.6),bill()),k=i/n,r=(1-k)*1.3*Math.random();const a=Math.random()*6.28;b.position.set(Math.cos(a)*r,.05+k*.9+Math.random()*.1,Math.sin(a)*r);b.rotation.set((Math.random()-.5)*.25,Math.random()*6.28,(Math.random()-.5)*.25);b.castShadow=true;g.add(b)}
   L=lab('💵 '+fmt(v),'E · Claim','#4ade80',4.4);L.position.y=2.8}
@@ -1471,7 +1471,7 @@ function makeDrop(o,bc){if(!G||!ag[0])return;const me=ag[0],p=me.m.position,g=ne
  if(bc){sendCh(srvCh,'drop',{id,kind,v,x,y,z,exp});toast('📦 Drop placed — press E next to it to claim')}}
 function rmDrop(id){const i=DRS.findIndex(d=>d.id===id);if(i>=0){world.remove(DRS[i].g);DRS.splice(i,1)}}
 window.sasDropHook=(kind,v)=>{if(!G||!ag[0])return false;makeDrop({kind,v,exp:kind==='cash'?300:600},true);return true};
-window.sasDrop=(kind,v,exp)=>makeDrop({kind,v,exp},true);
+window.sasDrop=(kind,v,exp,ox,oz)=>makeDrop({kind,v,exp,x:ox,z:oz},true);
 const near=()=>{if(!G||!ag[0])return null;const p=ag[0].m.position;let b=null,bd=3.8;for(const d of DRS){if(d.open)continue;const q=Math.hypot(d.g.position.x-p.x,d.g.position.z-p.z);if(q<bd&&Math.abs(d.g.position.y-p.y)<5){bd=q;b=d}}return b};
 function give(i){const me=ag[0],j=me.inv.indexOf(null);if(j<0){me.coins+=SA[i][2]/2;return toast('Base full — sold '+SA[i][0]+' for 🪙'+fmt(SA[i][2]/2))}me.inv[j]={i,r:i===ix('Hacked Sahur')?18:SA[i][1]};refresh(me);toast('🎁 You got '+SA[i][0]+'!')}
 function reward(d){const me=ag[0];if(d.kind==='cash'){me.coins+=d.v;toast('💵 +🪙'+fmt(d.v))}else if(d.kind==='sahur')give(d.v);
@@ -1537,5 +1537,284 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});a
 setInterval(()=>{const c=$('sasMso');if(c&&data&&document.activeElement!==c)c.checked=data.set.mso??touch},700);
 })();
 
+</script>
+<script id="SAS_ONLINE_V26">
+/* Steal a Sahur v2.6.0 ONLINE: shared rooms, host-arbitrated conveyor, synced combat/steals, server bans + admin grants */
+(()=>{'use strict';
+const ADMIN_LUCK=1000;   // luck multiplier while a VERIFIED admin is in the room (1000 = x1000; use 10 for a literal "+1000%")
+const SEND_MS=160;       // position broadcast interval
+const sb=window.sasSupabase,$=id=>document.getElementById(id);
+if(!sb){console.error('Supabase client missing');return}
+const bn=s=>String(s||'').replace(/ \[.*\]$/,''),nl=s=>bn(s).toLowerCase().replace(/^#/,'').trim();
+let R=null,pres={},verOk={},verP={},hostId=null,hostT=0,seq=0,joinT=0,lastPres='',lastSt='',lastInv='',lastHit=0,inAtk=0;
+let tS=0,tI=0,tIF=0,tSF=0,tP=0;const claimed=new Set(),pend=new Map(),pendS=new Map();let ev={m:1,until:0};
+const uid=()=>window.sasCurrentUserId,isHost=()=>!!R&&hostId===uid(),rem=id=>ag.find(a=>a.remote&&a.id===id);
+const send=(e,p={})=>{try{R&&R.send({type:'broadcast',event:e,payload:{...p,from:uid()}})}catch(x){console.warn(x)}};
+const comp=inv=>inv.map(v=>v?[v.i,v.r]:0),okIt=v=>v&&SA[v[0]]&&RC[v[1]]!==undefined;
+const hg=()=>{const k=typeof getHeld==='function'&&getHeld();return !!(k&&WP[k]&&WP[k].gun)};
+function ann(t){let b=$('sasN2');if(!b){b=document.createElement('div');b.id='sasN2';b.style.cssText='position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:150;padding:12px 24px;border-radius:14px;font:700 20px Fredoka,sans-serif;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;text-align:center;max-width:92vw;display:none';document.body.appendChild(b)}
+ b.textContent='📣 '+String(t).slice(0,160);b.style.display='block';clearTimeout(b._t);b._t=setTimeout(()=>b.style.display='none',6000)}
+/* ---- server-verified admin (reads profiles.role; presence claims are never trusted) ---- */
+function vAdm(id){if(!verP[id])verP[id]=sb.from('profiles').select('role').eq('id',id).maybeSingle().then(({data:r})=>{verOk[id]=String(r?.role||'').toLowerCase()==='admin';elect();const a=rem(id);if(a&&verOk[id]&&!/\[ADMIN\]/.test(a.name)){const p=a.m.position.clone();world.remove(a.m);a.name+=' [ADMIN]';a.m=person(0xffd34d,a.name);a.m.position.copy(p);world.add(a.m)}return verOk[id]}).catch(()=>false);return verP[id]}
+function elect(){const ids=Object.keys(pres);if(!ids.length)return;let b=null,bs=-1;for(const id of ids){const s=(verOk[id]?1e12:0)+(pres[id].lv||0)*1e3;if(s>bs||(s===bs&&id<b)){b=id;bs=s}}hostId=b}
+/* ---- room ---- */
+const myPres=()=>{const m=ag[0];return{n:acc.name,b:m.base,adm:isAdm()?1:0,lv:data.lvl||0,t:joinT,pl:Date.now()<(data.luckEnd||0)?data.luckM:1}};
+function track(){if(!R||!ag[0])return;const p=JSON.stringify(myPres());if(p===lastPres)return;lastPres=p;R.track(JSON.parse(p))}
+function join(n){leave2();if(!uid())return;joinT=Date.now();
+ R=sb.channel('sas-room-v2-'+n,{config:{broadcast:{self:false},presence:{key:uid()}}});R.on('presence',{event:'sync'},onSync);
+ for(const k in H)R.on('broadcast',{event:k},({payload:p})=>{try{if(p&&p.from!==uid())H[k](p)}catch(e){console.warn(k,e)}});
+ R.subscribe(s=>{if(s==='SUBSCRIBED'){lastPres='';track();toast('🌐 Connected to Server '+n)}})}
+function leave2(){if(R){try{sb.removeChannel(R)}catch{}}R=null;pres={};hostId=null;claimed.clear();pend.clear();pendS.clear();ev={m:1,until:0}}
+function setBase(m,b){m.base=b;const p=BP(b);m.m.position.set(p.x,0,p.z+DIR(b)*6);refresh(m);applyAll()}
+function addRemote(id,p){const a={remote:true,id,bot:false,name:bn(p.n)+(verOk[id]?' [ADMIN]':''),base:p.b,coins:0,lv:0,inv:[],carry:null,lock:0,vy:0,vx:0,vz:0,chase:0,tx:null};
+ a.m=person(0x4dd0ff,a.name);const b=BP(a.base);a.m.position.set(b.x,0,b.z+DIR(a.base)*6);world.add(a.m);ag.push(a);refresh(a);return a}
+function dropRemote(a){const me=ag[0];if(a.carry&&a.carry.from===me){const j=me.inv.indexOf(null);if(j>=0){me.inv[j]={i:a.carry.i,r:a.carry.r};refresh(me);hud();toast('Thief left: your Sahur came back')}}
+ if(a.carry)world.remove(a.carry.m);world.remove(a.m);if(a.sg)world.remove(a.sg);ag.splice(ag.indexOf(a),1)}
+function onSync(){if(!R||!G||!ag[0])return;const st=R.presenceState();pres={};for(const k in st)pres[k]=st[k][0];const ids=Object.keys(pres),me=ag[0];
+ const order=[...ids].sort((a,b)=>(pres[a].t-pres[b].t)||(a<b?-1:1));if(order.indexOf(uid())>=10){toast('Server full (10/10)');return window.leave()}
+ for(const id of ids){if(id===uid())continue;if(pres[id].adm)vAdm(id);let a=rem(id);if(!a){a=addRemote(id,pres[id]);send('inv',invPkt());send('st',stPkt());if(isHost())send('snap',{to:id,items:items.filter(t=>t.id).map(t=>({id:t.id,i:t.i,x:t.m.position.x})),ev})}
+  if(a.base!==pres[id].b){a.base=pres[id].b;refresh(a)}}
+ for(const a of ag.filter(x=>x.remote&&!pres[x.id]))dropRemote(a);
+ const used=new Set(ids.filter(i=>i!==uid()).map(i=>pres[i].b));
+ const older=ids.some(i=>i!==uid()&&pres[i].b===me.base&&((pres[i].t-joinT)||(i<uid()?-1:1))<0);
+ if(used.has(me.base)&&older){const f=[...Array(10).keys()].filter(b=>!used.has(b));if(f.length)setBase(me,f[Math.random()*f.length|0])}
+ elect();signs();track()}
+/* ---- state packets ---- */
+const stPkt=()=>{const m=ag[0],p=m.m.position,c=m.carry,lk=m.lock===Infinity?999:Math.max(0,Math.min(60,m.lock-tt));
+ return{x:+p.x.toFixed(2),y:+p.y.toFixed(2),z:+p.z.toFixed(2),r:+m.m.rotation.y.toFixed(2),lk:lk||0,sn:Math.max(0,m.stun||0),h:(typeof getHeld==='function'&&getHeld())||data.eq,
+  cr:c?[c.i,c.r,c.from&&c.from.remote?c.from.id:uid(),c.j]:0,sp:Math.hypot(m.vx||0,m.vz||0)>.5?1:0}};
+const invPkt=()=>{const m=ag[0];return{inv:comp(m.inv),lv:m.lv,f2:m.f2?1:0}};
+const invNow=()=>{lastInv='';tI=0};
+/* ---- luck: host's view of the room, identical on every client for the Index panel ---- */
+const _lw=lw;lw=function(){if(!R)return _lw();const sv=data.luckEnd;data.luckEnd=0;let w;try{w=_lw()}finally{data.luckEnd=sv}
+ const ids=Object.keys(pres),top=pres[hostId]||{};let m=1+(top.lv||0)/100;if(ids.some(k=>verOk[k]))m*=ADMIN_LUCK;
+ m*=Math.max(1,...ids.map(k=>+pres[k].pl||1));if(Date.now()<ev.until)m*=ev.m;return w.map((v,i)=>i>=2?v*m:v)};
+function spawnNet(id,i,x){if(items.some(t=>t.id===id)||!SA[i])return;const m=mk(i,SA[i][1]);m.position.set(x??-44,.5,0);m.userData.pop=0;world.add(m);items.push({i,m,id})}
+function takeLocal(id){const k=items.findIndex(t=>t.id===id);if(k>=0){world.remove(items[k].m);items.splice(k,1)}}
+function hostSpawn(i){const id=uid().slice(0,6)+':'+(seq++);spawnNet(id,i,-44);send('spawn',{id,i,x:-44})}
+/* ---- incoming events ---- */
+const H={
+ st(p){const a=rem(p.from);if(!a)return;if(a.tx==null)a.m.position.set(p.x,p.y,p.z);a.tx=p.x;a.ty=p.y;a.tz=p.z;a.tr=p.r;a.rsp=p.sp;a.rst=p.sn;a.rh=p.h;a.lock=p.lk>=999?Infinity:p.lk>0?tt+p.lk:0;
+  const c=p.cr,key=c?c.join():'';if(key!==a.ck){a.ck=key;if(a.carry){world.remove(a.carry.m);a.carry=null}
+   if(c&&okIt(c)){const v=c[2]===uid()?ag[0]:rem(c[2]),m=mk(c[0],c[1]);m.scale.setScalar(.5);world.add(m);a.carry={i:c[0],r:c[1],from:v||null,j:c[3],m}}}},
+ inv(p){const a=rem(p.from);if(!a||!Array.isArray(p.inv))return;a.inv=p.inv.slice(0,24).map(v=>okIt(v)?{i:v[0],r:v[1]}:null);a.lv=Math.max(0,Math.min(4,+p.lv||0));a.f2=p.f2;refresh(a);applyAll()},
+ spawn(p){if(p.from===hostId)spawnNet(p.id,p.i,p.x)},
+ snap(p){if(p.to!==uid()||p.from!==hostId)return;if(p.ev)ev=p.ev;for(const t of items.filter(t=>t.id))takeLocal(t.id);(p.items||[]).forEach(t=>spawnNet(t.id,t.i,t.x))},
+ reqsp(p){vAdm(p.from).then(ok=>ok&&isHost()&&hostSpawn(+p.i))},
+ claim(p){if(!isHost())return;if(claimed.has(p.id)){send('deny',{to:p.from,id:p.id});return}claimed.add(p.id);if(claimed.size>3000)claimed.clear();send('taken',{id:p.id,pid:p.from});takeLocal(p.id)},
+ taken(p){takeLocal(p.id)},
+ deny(p){if(p.to!==uid())return;const x=pend.get(p.id);pend.delete(p.id);if(!x)return;const m=ag[0];if(x.slot>=0)m.inv[x.slot]=null;m.coins+=x.c;refresh(m);hud();toast('Too slow: someone grabbed it first!')},
+ steal(p){if(p.to!==uid())return;const m=ag[0],t=rem(p.from),it=m.inv[p.j],sp=it&&slotPos(m.base,p.j);
+  const ok=t&&it&&!(m.lock>tt)&&!isAdm()&&Math.hypot(t.m.position.x-sp.x,t.m.position.z-sp.z)<6;
+  if(!ok)return send('stealno',{to:p.from});m.inv[p.j]=null;refresh(m);hud();toast('⚠ '+bn(t.name)+' stole your Sahur! Hit them!');send('stealok',{to:p.from,j:p.j,i:it.i,r:it.r});invNow()},
+ stealok(p){if(p.to!==uid())return;const v=rem(p.from);pendS.delete(p.from);if(!v||ag[0].carry)return;v.inv[p.j]={i:p.i,r:p.r};_steal(ag[0],v,p.j)},
+ stealno(p){if(p.to===uid()){pendS.clear();toast('Too late: locked or already gone')}},
+ ret(p){if(p.to!==uid())return;const m=ag[0],j=m.inv[p.j]||p.j>=24?m.inv.indexOf(null):p.j;if(j<0)return;m.inv[j]={i:p.i,r:p.r};refresh(m);hud();invNow()},
+ retake(p){if(p.to!==uid())return;const c=ag[0].carry;if(c){world.remove(c.m);ag[0].carry=null;toast('💥 You lost the Sahur!')}},
+ hit(p){if(p.to!==uid()||Date.now()-lastHit<150)return;lastHit=Date.now();const m=ag[0],c=(v,l)=>Math.max(-l,Math.min(l,+v||0)),a=rem(p.from);
+  m.m.position.x=Math.max(-46,Math.min(46,m.m.position.x+c(p.dx,15)));m.m.position.z=Math.max(-40,Math.min(40,m.m.position.z+c(p.dz,15)));m.stun=Math.min(6,+p.st||1);if(m.carry)giveBack(m);toast('💥 '+(a?bn(a.name):'Someone')+' hit you!')},
+ act(p){const a=rem(p.from);if(!a)return;if(p.k==='sw')a.sw=.35;else{const l=Math.min(100,+p.l||40),dx=Math.sin(p.r),dz=Math.cos(p.r),t=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,l),new THREE.MeshBasicMaterial({color:0xffee66}));
+  t.position.set(p.x+dx*l/2,2.4,p.z+dz*l/2);t.rotation.y=p.r;world.add(t);setTimeout(()=>world.remove(t),70)}},
+ evt(p){vAdm(p.from).then(ok=>{if(!ok)return;ev={m:Math.min(1e6,Math.max(1,+p.m||1)),until:Date.now()+Math.min(600,+p.min||1)*6e4};ann('🍀 Server luck x'+ev.m+' for '+p.min+' min!')})},
+ cmd(p){vAdm(p.from).then(ok=>{if(!ok||!G||!ag[0])return;const m=ag[0],mine=p.to==='all'||p.to===nl(acc.name);
+  if(p.k==='ann')return ann(p.t);if(p.k==='boom'){const d=m.m.position.clone().sub(V(p.x,0,p.z)).setY(0),L=d.length();if(L<p.r&&!isAdm()){d.normalize().multiplyScalar(30+60*(1-L/p.r));m.m.position.add(d);m.stun=3;if(m.carry)giveBack(m)}return}
+  if(!mine||isAdm())return;if(p.k==='kick')kickMe(p.reason);if(p.k==='frz')m.stun=Math.min(30,+p.s||3);if(p.k==='tp')m.m.position.set(+p.x||0,0,+p.z||0)})}
+};
+function kickMe(r){const k=$('sasKick'),w=$('sasKWhy');if(w)w.textContent='Reason: '+(r||'No reason provided');if(k)k.style.display='flex';Promise.resolve(window.leave()).then(()=>window.logout()).catch(()=>{})}
+/* ---- wrapped game functions ---- */
+const _buy=buy;buy=function(a,it){if(!R||a!==ag[0]||!it.id)return _buy(a,it);if(claimed.has(it.id))return 0;const bf=a.inv.slice(),ok=_buy(a,it);if(!ok)return 0;
+ if(isHost()){claimed.add(it.id);send('taken',{id:it.id,pid:uid()})}else{pend.set(it.id,{slot:a.inv.findIndex((v,j)=>v&&!bf[j]),c:SA[it.i][2]});setTimeout(()=>pend.delete(it.id),4000);send('claim',{id:it.id})}return ok};
+const _steal=steal;steal=function(a,v,j){if(!R||!v.remote||a!==ag[0])return _steal(a,v,j);if(pendS.size)return;pendS.set(v.id,j);setTimeout(()=>pendS.delete(v.id),3000);send('steal',{to:v.id,j})};
+const _gb=giveBack;giveBack=function(a){const c=a.carry;if(!R||!c)return _gb(a);const v=c.from;
+ if(a===ag[0]&&v&&v.remote){send('ret',{to:v.id,i:c.i,r:c.r,j:c.j});world.remove(c.m);a.carry=null;return}
+ if(a!==ag[0]&&v===ag[0]){const r=_gb(a);send('retake',{to:a.id});return r}return _gb(a)};
+const atk=(o,k0)=>function(){if(!R||!G||!ag[0]||inAtk)return o.apply(this,arguments);const me=ag[0],k=k0==='f'||hg()?'f':'sw',ready=k==='sw'?!(me.sw>0||me.sc>0):!(me.gc>0),rm=ag.filter(a=>a.remote),sn=rm.map(a=>[a.m.position.x,a.m.position.z]);
+ inAtk=1;let r;try{r=o.apply(this,arguments)}finally{inAtk=0}
+ if(ready){const w=WP[k==='f'?data.gun:data.eq]||{};send('act',{k,x:me.m.position.x,z:me.m.position.z,r:me.m.rotation.y,l:w.rg})}
+ rm.forEach((a,i)=>{const dx=a.m.position.x-sn[i][0],dz=a.m.position.z-sn[i][1];if(Math.hypot(dx,dz)>.01){send('hit',{to:a.id,dx,dz,st:a.stun||1});a.m.position.x-=dx;a.m.position.z-=dz}});return r};
+swing=atk(swing,'sw');fire=atk(fire,'f');
+const _tick=tick;tick=function(dt){const me=ag[0];if(!R||!G||!me)return _tick(dt);spT=1e9;let sv=null;
+ if(me.stun>0){me.stun-=dt;sv={...keys};for(const k of['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','Space'])keys[k]=0}
+ _tick(dt);if(sv){Object.assign(keys,sv);me.m.rotation.x=-1.3}else me.m.rotation.x=0;
+ for(const a of ag){if(!a.remote||a.tx==null)continue;const p=a.m.position,k=Math.min(1,dt*12);a.vx=a.rsp?1:0;a.vz=0;p.x+=(a.tx-p.x)*k;p.y+=(a.ty-p.y)*k;p.z+=(a.tz-p.z)*k;
+  let d=a.tr-a.m.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));a.m.rotation.y+=d*k;a.m.rotation.x=a.rst>0?-1.3:0;const g=a.m.userData.gunModel;if(g)g.visible=!!(WP[a.rh]&&WP[a.rh].gun)}
+ if(isHost()){hostT-=dt;if(hostT<=0){hostT=2.4;const W=lw();let r=Math.random()*W.reduce((x,y)=>x+y,0),i=0;while(i<W.length-1&&r>W[i]){r-=W[i];i++}hostSpawn(i)}}
+ for(const it of items.slice())if(!it.id){if(isHost()){it.id=uid().slice(0,6)+':'+(seq++);send('spawn',{id:it.id,i:it.i,x:it.m.position.x})}else{world.remove(it.m);items.splice(items.indexOf(it),1);send('reqsp',{i:it.i})}}
+ const n=performance.now();
+ if(n-tS>SEND_MS){tS=n;const p=stPkt(),k=JSON.stringify(p);if(k!==lastSt||n-tSF>1000){lastSt=k;tSF=n;send('st',p)}}
+ if(n-tI>500){tI=n;const p=invPkt(),k=JSON.stringify(p);if(k!==lastInv||n-tIF>6000){lastInv=k;tIF=n;send('inv',p)}}
+ if(n-tP>2000){tP=n;track()}};
+const _start=window.start;window.start=function(l,c){leave2();_start(l,c);const m=/Server\s+(\d+)/i.exec(l||'');if(m)setTimeout(()=>join(+m[1]),0)};
+const _leave=window.leave;window.leave=async function(){leave2();return _leave()};
+/* ---- HUD line ---- */
+const hb=document.createElement('div');hb.className='hb';hb.style.cssText='left:12px;top:150px;font-size:13px;display:none';$('hud').appendChild(hb);
+setInterval(()=>{const on=!!R&&G;hb.style.display=on?'block':'none';if(!on)return;const h=pres[hostId],ids=Object.keys(pres);hb.textContent='🌐 '+ids.length+'/10 online · host: '+(h?bn(h.n):'…')+' · 🍀 x'+Math.round(lw().reduce((a,b)=>a+b,0)>0?(ids.some(k=>verOk[k])?ADMIN_LUCK:1):1)+(ids.some(k=>verOk[k])?' 👑':'')},1000);
+/* ---- grants, bans (server side), lobby ---- */
+let lastU=null,UC=null,LB=null,busy=new Set();
+async function applyGrant(g){if(busy.has(g.id))return;busy.add(g.id);const m=G&&ag[0],amt=+g.amount||0,s=SA[+g.sahur_id];
+ if(g.kind==='cash'){if(m){m.coins+=amt;hud()}else if(data)data.coins=(data.coins||0)+amt;toast('💵 Admin sent you 🪙'+fmt(amt))}
+ else if(g.kind==='sahur'&&s){if(m){const j=m.inv.indexOf(null);if(j<0){busy.delete(g.id);return toast('Base full: free a slot and the gift will arrive')}m.inv[j]={i:+g.sahur_id,r:s[1]};refresh(m);hud();invNow();toast('🎁 Admin gave you '+s[0])}
+  else if(data){const lim=SLOTS[data.lv||0];data.inv=data.inv||[];let j=0;while(data.inv[j]&&j<lim)j++;if(j>=lim){busy.delete(g.id);return}data.inv[j]=[+g.sahur_id,s[1]]}}
+ try{await sb.rpc('ack_grant',{gid:g.id})}catch{}if(m)save();else persist()}
+async function pollGrants(){if(!uid())return;try{const{data:r}=await sb.from('admin_grants').select('*').eq('target_id',uid()).is('delivered_at',null).order('id');for(const g of r||[])await applyGrant(g)}catch(e){console.warn(e)}}
+async function chkBan(){try{const{data:r}=await sb.rpc('my_ban'),b=Array.isArray(r)?r[0]:r;if(!b)return;leave2();$('hud').style.display=$('menu').style.display='none';
+ $('banWhy').textContent='Reason: '+(b.reason||'No reason provided');$('banWhen').textContent=b.until?'Until: '+new Date(b.until).toLocaleString():'Permanent';$('banScreen').style.display='flex';try{await window.logout()}catch{}}catch(e){console.warn(e)}}
+setInterval(()=>{const u=uid();if(!u){if(UC){try{sb.removeChannel(UC)}catch{}UC=null}lastU=null;return}
+ if(!LB)LB=sb.channel('sas-lobby-v2',{config:{broadcast:{self:true}}}).on('broadcast',{event:'gann'},({payload:p})=>p&&vAdm(p.from).then(ok=>ok&&ann('🌍 '+p.t))).subscribe();
+ if(lastU!==u){lastU=u;chkBan();pollGrants();if(UC)try{sb.removeChannel(UC)}catch{}
+  UC=sb.channel('sas-user-'+u).on('postgres_changes',{event:'INSERT',schema:'public',table:'admin_grants',filter:'target_id=eq.'+u},({new:g})=>applyGrant(g))
+   .on('postgres_changes',{event:'*',schema:'public',table:'bans',filter:'user_id=eq.'+u},()=>chkBan()).subscribe()}},1000);
+setInterval(()=>{if(G)pollGrants()},20000);
+/* ---- admin commands (grants/bans are checked again by the database) ---- */
+const rpc=async(fn,a,ok)=>{const{error}=await sb.rpc(fn,a);toast(error?'❌ '+error.message:'✔ '+ok)};
+const sid=t=>{const q=t.join(' ').toLowerCase();return/^\d+$/.test(q)?+q:SA.findIndex(s=>s[0].toLowerCase().includes(q))};
+const ONL=()=>Object.keys(pres).map(k=>bn(pres[k].n));
+function run(raw){const t=(raw.trim().replace(/^\//,'').match(/"[^"]*"|\S+/g)||[]).map(x=>x.replace(/"/g,'')),n0=(t.shift()||'').toLowerCase();let c=n0;if(c==='give'&&/^#/.test(t[0]||''))c='givesahur';if(c==='cash')c='givecash';const n=nl(t[0]),a1=+t[1];
+ const need=()=>isAdm()?true:(toast('Admin only'),false),room=()=>R&&G?true:(toast('Join an online server first'),false),w=ag[0]?ag[0].m.position:null;
+ switch(c){
+ case'givecash':case'givemoney':if(!need())return 1;rpc('admin_give',{p_username:n,p_kind:'cash',p_amount:a1||0,p_sahur:null},'cash sent to '+n);return 1;
+ case'givesahur':{if(!need())return 1;const i=sid(t.slice(1));if(!SA[i])return toast('Unknown Sahur (use name or ID)'),1;rpc('admin_give',{p_username:n,p_kind:'sahur',p_amount:0,p_sahur:i},SA[i][0]+' sent to '+n);return 1}
+ case'giveall':{if(!need()||!room())return 1;const k=(t[0]||'').toLowerCase(),i=k==='sahur'?sid(t.slice(1)):-1;ONL().forEach(u=>rpc('admin_give',{p_username:u,p_kind:k==='sahur'?'sahur':'cash',p_amount:k==='sahur'?0:+t[1]||0,p_sahur:k==='sahur'?i:null},'sent to '+u));return 1}
+ case'ban':if(!need())return 1;rpc('admin_ban',{p_username:n,p_minutes:a1||0,p_reason:t.slice(2).join(' ')||'No reason provided'},n+' banned'+(a1?' for '+a1+'m':' permanently'));return 1;
+ case'unban':if(!need())return 1;rpc('admin_unban',{p_username:n},n+' unbanned');return 1;
+ case'kick':if(!need()||!room())return 1;send('cmd',{k:'kick',to:n,reason:t.slice(1).join(' ')});toast('Kick sent to '+n);return 1;
+ case'announce':if(!need()||!room())return 1;send('cmd',{k:'ann',to:'all',t:t.join(' ')});ann(t.join(' '));return 1;
+ case'gannounce':if(!need())return 1;LB&&LB.send({type:'broadcast',event:'gann',payload:{t:t.join(' '),from:uid()}});return 1;
+ case'luck':case'srvluck':if(!R||!G)return 0;if(!need())return 1;send('evt',{m:+t[0]||10,min:+t[1]||5});ev={m:Math.min(1e6,+t[0]||10),until:Date.now()+Math.min(600,+t[1]||5)*6e4};ann('🍀 Server luck x'+ev.m+' for '+(+t[1]||5)+' min!');return 1;
+ case'freeze':if(!need()||!room())return 1;send('cmd',{k:'frz',to:n,s:a1||5});return 1;
+ case'bring':if(!need()||!room())return 1;send('cmd',{k:'tp',to:n,x:w.x+2,z:w.z});return 1;
+ case'goto':{if(!need()||!room())return 1;const a=ag.find(x=>x.remote&&nl(x.name)===n);if(a)w.set(a.m.position.x+2,a.m.position.y,a.m.position.z);else toast('Not in this server');return 1}
+ case'boom':if(!need()||!room())return 1;send('cmd',{k:'boom',to:'all',x:w.x,z:w.z,r:a1||25});toast('💥 BOOM');return 1;
+ case'rain':{if(!need()||!G||!window.sasDrop)return 1;const v=(+t[0]||1e6)/8;for(let i=0;i<8;i++)setTimeout(()=>{const p=ag[0].m.position;window.sasDrop('cash',v,300,p.x+(Math.random()-.5)*10,p.z+(Math.random()-.5)*10)},i*400);return 1}
+ case'players':if(!room())return 1;toast('Online: '+ONL().join(', '));return 1;
+ case'serverinfo':if(!room())return 1;toast('Host: '+bn((pres[hostId]||{}).n)+' · players '+Object.keys(pres).length+' · items '+items.length);return 1;
+ case'help':if(!isAdm())return 0;toast('/give #N sahur · /cash #N AMT · /event bloodmoon|fire|ice|abuse|stop · /trade #N · /info #N · /smite #N · /giveall · /ban #N MIN · /unban · /kick · /luck · /freeze · /bring · /goto · /boom · /rain · /announce · /gannounce · /players');return 1}
+ return 0}
+const hnd=e=>{const el=e.target;if(!el||!isAdm())return;let raw;
+ if(e.type==='keydown'&&e.key==='Enter'&&(el.id==='cmd'||el.id==='sasCommandInput'))raw=el.value;
+ else if(e.type==='click'&&el.id==='sasCommandRun')raw=$('sasCommandInput').value;
+ else if(e.type==='click'&&el.id==='nbb'){e.stopImmediatePropagation();rpc('admin_ban',{p_username:nl($('nbn').value),p_minutes:Math.round(+$('nbv').value*+$('nbu').value/6e4)||0,p_reason:($('nbr')&&$('nbr').value)||'No reason provided'},'ban saved on server');return}
+ else return;
+ raw=(raw||'').trim();if(!raw)return;let h=0;try{h=run(raw)}catch(x){console.warn(x)}
+ if(h){e.stopImmediatePropagation();e.preventDefault();if(e.type==='keydown'){el.value='';if(el.id==='cmd'){el.style.display='none';el.blur()}}else $('sasCommandInput').value=''}};
+addEventListener('keydown',hnd,true);addEventListener('click',hnd,true);
+/* ---- admin panel tab ---- */
+(function(){const P=$('sasAdminPanel'),tabs=P&&P.querySelector('.sasx-tabs');if(!tabs)return;
+ const b=document.createElement('button');b.textContent='🌐 Online';tabs.appendChild(b);const pg=document.createElement('section');pg.id='sasOnPage';pg.style.display='none';
+ pg.innerHTML='<h3>🎁 Give to ANY player (online or offline)</h3><input id="onN" placeholder="Username"><input id="onA" type="number" placeholder="Cash amount"><button id="onC">Give cash</button><select id="onS"></select><button id="onG">Give Sahur</button><button id="onAll">Give cash to everyone in room</button>'
+ +'<h3>🍀 Server luck event</h3><input id="onLm" type="number" value="100" placeholder="x"><input id="onLd" type="number" value="5" placeholder="minutes"><button id="onL">Start for this room</button>'
+ +'<h3>⛔ Moderation (server-side)</h3><input id="onBm" type="number" value="60" placeholder="minutes (0 = permanent)"><input id="onBr" placeholder="Reason"><button id="onB">Ban</button><button id="onU">Unban</button><button id="onK">Kick</button>'
+ +'<h3>📣 Announce</h3><input id="onT" maxlength="140" placeholder="Message"><button id="onAn">This room</button><button id="onGa">All servers</button>';
+ tabs.after(pg);$('onS').innerHTML=SA.map((s,i)=>'<option value="'+i+'">'+s[0]+'</option>').join('');
+ const V=id=>$(id).value,go=s=>()=>run(s());
+ $('onC').onclick=go(()=>'givecash '+V('onN')+' '+V('onA'));$('onG').onclick=go(()=>'givesahur '+V('onN')+' '+V('onS'));$('onAll').onclick=go(()=>'giveall cash '+V('onA'));
+ $('onL').onclick=go(()=>'luck '+V('onLm')+' '+V('onLd'));$('onB').onclick=go(()=>'ban '+V('onN')+' '+V('onBm')+' '+V('onBr'));$('onU').onclick=go(()=>'unban '+V('onN'));$('onK').onclick=go(()=>'kick '+V('onN')+' '+V('onBr'));
+ $('onAn').onclick=go(()=>'announce '+V('onT'));$('onGa').onclick=go(()=>'gannounce '+V('onT'));
+ const others=[...tabs.querySelectorAll('button')].filter(x=>x!==b);
+ b.onclick=()=>{others.forEach(x=>x.classList.remove('active'));b.classList.add('active');P.querySelectorAll('[data-page],#sasModPage').forEach(p=>p.style.display='none');pg.style.display='block'};
+ others.forEach(x=>x.addEventListener('click',()=>{b.classList.remove('active');pg.style.display='none'}))})();
+window.SASNET={H,send,vAdm,ann,rem,uid,isHost,pres:()=>pres,invNow,setLuck:(m,min)=>{ev={m:Math.min(1e6,Math.max(1,m)),until:Date.now()+min*6e4}},inRoom:()=>!!R};
+const ap=document.querySelector('#auth p');if(ap)ap.textContent='STEAL A SAHUR V 2.7.0 · ONLINE';
+})();
+</script>
+<script id="SAS_ONLINE_V27">
+/* Steal a Sahur v2.7: world events (2x cash), player trading, realistic weapons, server-validated saves */
+(()=>{'use strict';
+const N=window.SASNET,sb=window.sasSupabase,$=id=>document.getElementById(id);if(!N||!sb){console.error('v2.6 online layer missing');return}
+const bn=s=>String(s||'').replace(/ \[.*\]$/,''),nl=s=>bn(s).toLowerCase().replace(/^#/,'').trim(),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const st=document.createElement('style');st.textContent='#sasEvPill{left:50%;top:150px;transform:translateX(-50%);white-space:nowrap;display:none;font-size:15px}#sasAmmo{right:12px;bottom:236px;display:none;font-size:18px}'
++'#sasHit{position:fixed;left:50%;top:50%;width:28px;height:28px;transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:6;transition:opacity .25s}#sasHit:before,#sasHit:after{content:"";position:absolute;background:#ff4040;box-shadow:0 0 4px #000}#sasHit:before{left:12px;top:0;width:4px;height:28px;transform:rotate(45deg)}#sasHit:after{top:12px;left:0;height:4px;width:28px;transform:rotate(45deg)}'
++'#sasVig{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;transition:opacity .3s;box-shadow:inset 0 0 140px 50px #d00}#sasTrq{position:fixed;left:50%;top:30%;transform:translateX(-50%);z-index:90;display:none;text-align:center}';document.head.appendChild(st);
+/* ---------- secure saves: every cloud save goes through the validating save_game() database function ---------- */
+const _from=sb.from.bind(sb);sb.from=t=>{const q=_from(t);if(t!=='game_saves')return q;return new Proxy(q,{get(o,k){if(k==='upsert')return row=>sb.rpc('save_game',{p_data:row&&row.game_data});const v=o[k];return typeof v==='function'?v.bind(o):v}})};
+/* ---------- sound / feedback ---------- */
+let ac,shake=0;const AC=()=>{try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();return ac}catch{return null}};
+function snd(k){const c=AC();if(!c)return;const P={pist:[.12,900,.5],mp5:[.09,1400,.4],shot:[.35,500,.9],snip:[.5,350,1],arf:[.05,1800,.25],melee:[.12,300,.5],hit:[.08,200,.6],click:[.03,3000,.2],reload:[.1,2500,.25]}[k]||[.1,1000,.4],n=Math.floor(c.sampleRate*P[0]),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+ for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();f.type='lowpass';f.frequency.value=P[1];g.gain.value=P[2]*.5;s.buffer=b;s.connect(f);f.connect(g);g.connect(c.destination);s.start()}
+const hm=document.createElement('div');hm.id='sasHit';document.body.appendChild(hm);const vg=document.createElement('div');vg.id='sasVig';document.body.appendChild(vg);
+const hitm=()=>{hm.style.opacity=1;setTimeout(()=>hm.style.opacity=0,110)},vig=o=>{vg.style.opacity=o;setTimeout(()=>vg.style.opacity=0,350)};
+/* ---------- realistic weapons: magazines, reload (R), spread, recoil, muzzle flash ---------- */
+Object.assign(WP,{pist:{n:'M9 Pistol',c:8000,gun:1,kb:2,st:.5,rg:34,cd:.28,mag:12,rl:1.3,spr:.025},shot:{n:'Pump Shotgun',c:40000,gun:1,kb:9,st:1.4,rg:15,cd:.9,mag:6,rl:2.6,spr:.12},snip:{n:'Bolt Sniper',c:150000,gun:1,kb:6,st:2.2,rg:110,cd:1.4,mag:5,rl:2.8,spr:.004}});
+Object.assign(WP.mp5,{mag:30,rl:1.8,spr:.045});Object.assign(WP.arf,{mag:1e9,rl:0,spr:.01});
+const AM={},am=k=>AM[k]||(AM[k]={n:WP[k].mag||30,rl:0}),hg=()=>{const k=typeof getHeld==='function'&&getHeld();return !!(k&&WP[k]&&WP[k].gun)};
+const snap=()=>ag.filter(a=>a!==ag[0]).map(a=>[a.m.position.x,a.m.position.z]),moved=s=>ag.filter(a=>a!==ag[0]).some((a,i)=>s[i]&&Math.hypot(a.m.position.x-s[i][0],a.m.position.z-s[i][1])>.01);
+function reload(){const k=data.gun,w=WP[k];if(!G||!w||!w.mag||w.mag>1e8)return;const a=am(k),now=performance.now();if(a.rl>now||a.n>=w.mag)return;a.rl=now+w.rl*1000;snd('reload');toast('🔄 Reloading '+w.n+'…');setTimeout(()=>{a.n=w.mag;a.rl=0},w.rl*1000)}
+function flash(me){const p=me.m.position,f=me.m.rotation.y,m=new THREE.Mesh(new THREE.SphereGeometry(.28,8,8),new THREE.MeshBasicMaterial({color:0xffcc55}));m.position.set(p.x+Math.sin(f)*1.8,p.y+2.5,p.z+Math.cos(f)*1.8);world.add(m);setTimeout(()=>world.remove(m),45)}
+const _fire=fire;fire=function(){const me=ag[0],k=data&&data.gun,w=WP[k];if(!G||!me||!w||!w.gun)return _fire.apply(this,arguments);const a=am(k),now=performance.now();
+ if(a.rl>now||me.gc>0)return;if(a.n<=0){snd('click');reload();return}
+ if(w.mag<1e8)a.n--;const sp=(w.spr||.03)*(cam.fov<50?.35:1)*(1+Math.min(2,Math.hypot(me.vx||0,me.vz||0)/8)),ry=me.m.rotation.y,sn=snap();
+ me.m.rotation.y=ry+(Math.random()-.5)*2*sp;_fire.apply(this,arguments);me.m.rotation.y=ry;
+ snd(k);flash(me);pitch=Math.max(.05,Math.min(1.2,pitch+(w.kb>5?.05:.018)));shake=Math.max(shake,w.kb>5?.5:.15);if(moved(sn))hitm();if(a.n<=0&&w.mag<1e8)setTimeout(reload,250)};
+const _sw=swing;swing=function(){const me=ag[0];if(!G||!me||hg()||me.sw>0||me.sc>0)return _sw.apply(this,arguments);const sn=snap(),r=_sw.apply(this,arguments);snd('melee');if(moved(sn)){snd('hit');shake=Math.max(shake,.45);hitm()}return r};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||!G)return;if(e.code==='KeyR')reload();if(e.code==='KeyT'&&N.inRoom()){trender();P.classList.add('show')}});
+const am2=document.createElement('div');am2.id='sasAmmo';am2.className='hb';$('hud').appendChild(am2);
+setInterval(()=>{const k=typeof getHeld==='function'&&getHeld(),w=WP[k];if(!G||!w||!w.gun){am2.style.display='none';return}const a=am(k);am2.style.display='block';am2.textContent='🔫 '+w.n+' · '+(a.rl>performance.now()?'reloading…':w.mag>1e8?'∞':a.n+' / '+w.mag)+' · R'},120);
+const oh=N.H.hit;N.H.hit=p=>{oh(p);if(p.to===N.uid()){vig(.9);shake=.7;snd('hit')}};
+/* ---------- world events: every active event = 2x cash for all Sahurs ---------- */
+const EVS={bloodmoon:{n:'🩸 BLOOD MOON',sky:0x2a0508,fog:0x6a0d14,c:0xff2a2a,col:'#ff5a5a',up:-1},fire:{n:'🔥 FIRE EVENT',sky:0x4a1805,fog:0xb85a14,c:0xff8a1a,col:'#ffb347',up:1},ice:{n:'❄ ICE EVENT',sky:0xa8dcff,fog:0xe2f6ff,c:0xffffff,col:'#9fe8ff',up:-1},abuse:{n:'🚨 ADMIN ABUSE',sky:0x331055,fog:0x7a2fb0,c:0xffd34d,col:'#e08bff',up:1}};
+const AUTO=[[12,'bloodmoon'],[27,'fire'],[42,'ice']];let EV=null,cur=null,PT=null;
+const pad=n=>String(n).padStart(2,'0'),mmss=s=>Math.floor(s/60)+':'+pad(s%60);
+function evNow(){if(EV&&Date.now()<EV.until)return EV.k==='none'?null:[EV.k,Math.ceil((EV.until-Date.now())/1000)];const d=new Date(),m=d.getMinutes(),a=AUTO.find(x=>m>=x[0]&&m<x[0]+3);return a?[a[1],(a[0]+3-m)*60-d.getSeconds()]:null}
+function setEv(k,min,bc){EV={k:k==='stop'?'none':k,until:Date.now()+min*6e4};if(k==='abuse')N.setLuck(100,min);else if(k==='stop')N.setLuck(1,0);
+ if(bc&&N.inRoom())N.send('evk',{k,min});if(k==='stop')N.ann('Event stopped')}
+N.H.evk=p=>N.vAdm(p.from).then(ok=>ok&&(EVS[p.k]||p.k==='stop')&&setEv(p.k,Math.min(120,Math.max(1,+p.min||5)),false));
+const pill=document.createElement('div');pill.id='sasEvPill';pill.className='hb';$('hud').appendChild(pill);
+function mkPT(k){if(PT){sc.remove(PT);PT=null}if(!k)return;const n=240,g=new THREE.BufferGeometry(),a=new Float32Array(n*3);for(let i=0;i<n;i++){a[i*3]=Math.random()*130-65;a[i*3+1]=Math.random()*40;a[i*3+2]=Math.random()*100-50}
+ g.setAttribute('position',new THREE.BufferAttribute(a,3));PT=new THREE.Points(g,new THREE.PointsMaterial({color:EVS[k].c,size:.6,transparent:true,opacity:.9}));PT.frustumCulled=false;PT.userData.up=EVS[k].up;sc.add(PT)}
+/* ---------- trading ---------- */
+let T=null,TQ=null;const tradable=v=>v&&SA[v.i]&&SA[v.i][2]>0&&isFinite(SA[v.i][3]),nm=v=>SA[v.i][0]+' ('+(RN[SA[v.i][1]]||'?')+')';
+const P=document.createElement('div');P.id='sasTr';P.className='sasx';P.innerHTML='<div class="sasx-card"><h2>🤝 Trading</h2><div id="sasTrB"></div><div style="text-align:right"><button class="secondary" id="sasTrX">Close</button></div></div>';document.body.appendChild(P);
+const prompt=document.createElement('div');prompt.id='sasTrq';prompt.className='hb';document.body.appendChild(prompt);
+const tclose=()=>{T=null;P.classList.remove('show')};
+function tcancel(note){if(T&&note)N.send('tcancel',{to:T.w});tclose()}$('sasTrX').onclick=()=>tcancel(true);
+function sendOff(){const m=ag[0];T.lm=T.am=0;N.send('toff',{to:T.w,items:T.mine.map(j=>m.inv[j]?[m.inv[j].i,m.inv[j].r]:0),cash:T.cash})}
+function trender(){const m=ag[0],el=$('sasTrB');if(!m)return;
+ if(!T){const L=ag.filter(a=>a.remote);el.innerHTML='<p>Pick a player in your server:</p>'+(L.map(a=>'<button data-w="'+a.id+'">'+esc(bn(a.name))+'</button>').join('')||'<p>No other players here.</p>');el.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>treq(b.dataset.w));return}
+ if(T.pend){el.innerHTML='<p>Waiting for '+esc(T.name)+' to accept…</p>';return}
+ el.innerHTML='<p>Trading with <b>'+esc(T.name)+'</b></p><div class="sasx-grid"><div><h3>You give</h3>'+m.inv.map((v,j)=>tradable(v)?'<label class="sasx-row" style="display:block"><input type="checkbox" data-s="'+j+'"'+(T.mine.includes(j)?' checked':'')+(T.lm?' disabled':'')+'> '+esc(nm(v))+'</label>':'').join('')
+ +'<label>🪙 <input id="sasTrC" type="number" min="0" value="'+T.cash+'"'+(T.lm?' disabled':'')+'></label></div><div><h3>'+esc(T.name)+' gives</h3>'+(T.th.map(v=>'<div class="sasx-row">'+esc(nm(v))+'</div>').join('')||'<small>nothing yet</small>')+'<div>🪙 '+fmt(T.tcash)+'</div></div></div>'
+ +'<p>'+(T.lm?'🔒 You locked':'You: open')+' · '+(T.lt?'🔒 they locked':'they: open')+(T.am?' · ✅ you accepted':'')+(T.at?' · ✅ they accepted':'')+'</p><button id="sasTrL">'+(T.lm?'🔓 Unlock':'🔒 Lock offer')+'</button><button id="sasTrA"'+(T.lm&&T.lt&&!T.am?'':' disabled')+'>✅ Accept trade</button>';
+ el.querySelectorAll('[data-s]').forEach(c=>c.onchange=()=>{T.mine=[...el.querySelectorAll('[data-s]:checked')].map(x=>+x.dataset.s);sendOff();trender()});
+ $('sasTrC').onchange=e=>{T.cash=Math.max(0,Math.min(m.coins,+e.target.value||0));sendOff();trender()};
+ $('sasTrL').onclick=()=>{T.lm=T.lm?0:1;T.am=0;N.send('tlock',{to:T.w,v:T.lm});trender()};
+ $('sasTrA').onclick=()=>{T.am=1;N.send('tacc',{to:T.w});trender();texec()}}
+function treq(w){const a=N.rem(w);if(!a||T)return;T={w,name:bn(a.name),mine:[],cash:0,th:[],tcash:0,lm:0,lt:0,am:0,at:0,pend:1};N.send('treq',{to:w});P.classList.add('show');trender();setTimeout(()=>{if(T&&T.pend){toast('No answer');tcancel(false)}},20000)}
+function texec(){if(!T||!(T.lm&&T.lt&&T.am&&T.at))return;const m=ag[0],t=T;
+ const mine=t.mine.map(j=>({j,v:m.inv[j]}));if(mine.some(x=>!tradable(x.v))||t.cash>m.coins||t.th.some(v=>!tradable(v))||m.inv.filter(v=>v===null).length+mine.length<t.th.length){toast('❌ Trade failed (items changed or base full)');return tcancel(true)}
+ tclose();mine.forEach(x=>m.inv[x.j]=null);t.th.forEach(v=>{m.inv[m.inv.indexOf(null)]={i:v.i,r:v.r}});m.coins+=t.tcash-t.cash;refresh(m);hud();N.invNow();save();
+ sb.rpc('log_trade',{p_with:t.w,p_gave:mine.map(x=>[x.v.i,x.v.r]),p_got:t.th.map(v=>[v.i,v.r]),p_cash_gave:t.cash,p_cash_got:t.tcash}).then(()=>{},()=>{});toast('🤝 Trade complete with '+t.name+'!')}
+const TH={treq(p){const a=N.rem(p.from);if(T||TQ||!a)return N.send('tans',{to:p.from,ok:0});TQ=p.from;prompt.style.display='block';prompt.innerHTML='🤝 <b>'+esc(bn(a.name))+'</b> wants to trade <button id="sasTy">Accept</button><button class="g" id="sasTn">Decline</button>';
+  const done=ok=>{prompt.style.display='none';const w=TQ;TQ=null;if(ok&&N.rem(w)){T={w,name:bn(a.name),mine:[],cash:0,th:[],tcash:0,lm:0,lt:0,am:0,at:0};P.classList.add('show');trender()}N.send('tans',{to:w,ok:ok&&N.rem(w)?1:0})};
+  $('sasTy').onclick=()=>done(1);$('sasTn').onclick=()=>done(0);setTimeout(()=>{if(TQ===p.from)done(0)},20000)},
+ tans(p){if(p.to!==N.uid()||!T||!T.pend||p.from!==T.w)return;if(p.ok){T.pend=0;trender()}else{toast('Trade declined');tcancel(false)}},
+ toff(p){if(!T||p.from!==T.w||T.pend)return;T.th=(p.items||[]).filter(v=>Array.isArray(v)&&SA[v[0]]&&RC[v[1]]!==undefined).slice(0,24).map(v=>({i:v[0],r:v[1]})).filter(tradable);T.tcash=Math.max(0,Math.min(1e18,+p.cash||0));T.lt=T.at=T.lm=T.am=0;trender()},
+ tlock(p){if(!T||p.from!==T.w)return;T.lt=p.v?1:0;T.at=0;T.am=0;trender()},tacc(p){if(!T||p.from!==T.w||!T.lt)return;T.at=1;trender();texec()},
+ tcancel(p){if(T&&p.from===T.w){toast('Trade cancelled by '+T.name);tclose()}}};
+for(const k in TH)N.H[k]=p=>{if(p.to&&p.to!==N.uid())return;TH[k](p)};
+const tb=document.createElement('button');tb.textContent='🤝 Trade (T)';tb.onclick=()=>{if(!N.inRoom())return toast('Trading works in online servers');trender();P.classList.add('show')};$('abtn')&&$('abtn').appendChild(tb);
+/* ---------- extra commands ---------- */
+function run2(raw){const t=(raw.trim().replace(/^\//,'').match(/"[^"]*"|\S+/g)||[]).map(x=>x.replace(/"/g,'')),c=(t.shift()||'').toLowerCase(),n=nl(t[0]);
+ if(c==='trade'){if(!N.inRoom())return toast('Trading works in online servers'),1;const a=n&&ag.find(x=>x.remote&&nl(x.name)===n);if(a)treq(a.id);else{trender();P.classList.add('show')}return 1}
+ if(!isAdm())return 0;
+ if(c==='event'){const k=(t[0]||'').toLowerCase();if(k!=='stop'&&!EVS[k])return toast('/event bloodmoon|fire|ice|abuse|stop [minutes]'),1;setEv(k,Math.max(1,Math.min(120,+t[1]||5)),true);return 1}
+ if(c==='info'){const P0=N.pres(),id=Object.keys(P0).find(i=>nl(P0[i].n)===n);toast(id?bn(P0[id].n)+' · Lv '+(P0[id].lv||0)+' · base '+(P0[id].b+1):'Not in this server');return 1}
+ if(c==='smite'){if(!N.inRoom())return 1;N.send('cmd',{k:'frz',to:n,s:6});toast('⚡ Smited '+n);return 1}
+ return 0}
+const hnd2=e=>{const el=e.target;if(!el)return;let raw;if(e.type==='keydown'&&e.key==='Enter'&&(el.id==='cmd'||el.id==='sasCommandInput'))raw=el.value;else if(e.type==='click'&&el.id==='sasCommandRun')raw=$('sasCommandInput').value;else return;
+ raw=(raw||'').trim();if(!raw)return;let h=0;try{h=run2(raw)}catch(x){console.warn(x)}if(h){e.stopImmediatePropagation();e.preventDefault();if(e.type==='keydown'){el.value='';if(el.id==='cmd'){el.style.display='none';el.blur()}}else $('sasCommandInput').value=''}};
+addEventListener('keydown',hnd2,true);addEventListener('click',hnd2,true);
+{const pg=$('sasOnPage');if(pg){const d=document.createElement('div');d.innerHTML='<h3>🌋 World events (2x cash)</h3>';for(const k in EVS){const b=document.createElement('button');b.textContent=EVS[k].n;b.onclick=()=>run2('event '+k+' 5');d.appendChild(b)}const s=document.createElement('button');s.textContent='⏹ Stop event';s.onclick=()=>run2('event stop');d.appendChild(s);pg.appendChild(d)}}
+/* ---------- tick: event visuals + 2x income, camera shake, trade safety ---------- */
+const _tk=tick;tick=function(dt){_tk(dt);if(!G||!ag[0])return;const me=ag[0],e=evNow(),k=e&&e[0];
+ if(k!==cur){cur=k;mkPT(k);if(k)N.ann(EVS[k].n+' started! All Sahurs earn 2x cash!')}
+ if(k){const d=EVS[k];sc.background.setHex(d.sky);sc.fog.color.setHex(d.fog);if(k==='bloodmoon')sun.intensity=.35;if(!isAdm())me.coins+=income(me)*dt;
+  if(PT){const q=PT.geometry.attributes.position,a=q.array,u=PT.userData.up;for(let i=0;i<a.length;i+=3){a[i+1]+=u*dt*(2+(i%5)*.4);a[i]+=Math.sin(performance.now()/900+i)*.02;if(a[i+1]>40)a[i+1]=0;if(a[i+1]<0)a[i+1]=40}q.needsUpdate=true}
+  pill.style.display='block';pill.style.borderColor=d.col;pill.textContent=d.n+' · 2× CASH · '+mmss(e[1])}
+ else{const D=new Date(),m=D.getMinutes(),nx=AUTO.find(x=>x[0]>m)||[AUTO[0][0]+60,AUTO[0][1]];pill.style.display='block';pill.style.borderColor='#ffffff40';pill.textContent='⏳ Next: '+EVS[nx[1]].n+' in '+mmss((nx[0]-m)*60-D.getSeconds())}
+ if(shake>0){cam.position.x+=(Math.random()-.5)*shake;cam.position.y+=(Math.random()-.5)*shake;shake=Math.max(0,shake-dt*2.5)}
+ if(me.stun>0)vg.style.opacity=.55;
+ if(T&&!T.pend&&!N.rem(T.w)){toast('Trade partner left');tclose()}};
+setInterval(()=>{pill.style.display=G?pill.style.display:'none'},500);
+})();
 </script>
 </body></html>
