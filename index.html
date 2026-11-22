@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sas-build="3.1.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
+<html lang="en" data-sas-build="3.2.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -23,7 +23,7 @@ button.g{background:#ffffff25;color:#fff}button:disabled{opacity:.4;pointer-even
 #adm{max-height:80vh;overflow:auto;position:absolute;right:12px;top:70px;display:none;pointer-events:auto;background:#000c;border:2px solid gold;border-radius:14px;padding:12px;width:230px}
 #adm *{width:100%;margin:3px 0}
 </style></head><body>
-<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 3.0.0</p>
+<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 3.2.0</p>
 <input id="u" placeholder="Username" maxlength="16"><input id="em" type="email" placeholder="Email (to register)"><input id="p" type="password" placeholder="Password"><label style="font-size:15px"><input type="checkbox" id="rob" style="width:auto"> I'm not a robot: <b id="q"></b> = <input id="qa" style="width:56px;padding:4px"></label>
 <div><button onclick="auth(0)">Log in</button><button class="g" onclick="auth(1)">Register</button></div><p id="am" style="color:#ff8080"></p></div></div>
 <div id="menu" class="pn" style="display:none"><div class="card" style="width:min(780px,94vw)"><h1>Pick a server</h1><p id="wl"></p><p id="sb" style="color:#ffd34d"></p>
@@ -31,7 +31,7 @@ button.g{background:#ffffff25;color:#fff}button:disabled{opacity:.4;pointer-even
 <div id="hud" style="display:none">
 <div class="hb" style="left:12px;top:12px">🪙 <span id="coins">0</span> <small style="color:#9f9">+<span id="inc">0</span>/s</small> · <span id="rk"></span></div>
 <div class="hb" style="right:12px;top:12px"><span id="sn"></span> <button onclick="resetChar()" style="padding:4px 12px">Reset</button><button onclick="$('set').style.display='flex'" style="padding:4px 12px">⚙</button><button onclick="leave()" style="padding:4px 12px">Leave</button></div>
-<div class="hb" style="left:50%;bottom:14px;transform:translateX(-50%);font-size:16px;white-space:nowrap">WASD move · drag look · Space jump · E buy/steal/shop/lock · X sell · F swing · G gun · / admin</div>
+<div class="hb" style="left:50%;bottom:14px;transform:translateX(-50%);font-size:16px;white-space:nowrap">WASD move · drag look · Space jump · E buy/steal/shop/lock · X sell · F swing · G gun · P admin panel</div>
 <div id="toast"></div><div id="fps" class="hb" style="left:12px;top:64px;font-size:14px;display:none"></div><input id="cmd" placeholder="/give 0-6 · /coins n · /rank n · /speed n · /tp n" style="display:none;position:absolute;left:50%;bottom:60px;transform:translateX(-50%);width:430px;pointer-events:auto">
 <div id="adm"><b style="color:gold">ADMIN PANEL</b><input id="tn" placeholder="Player name (blank = you)"><input id="av" type="number" placeholder="Amount"><button onclick="adm('$')">Add $</button><select id="ar"></select><button onclick="adm('r')">Set rank</button><select id="as"></select><button onclick="adm('b')">Give Sahur</button><select id="aw"></select><button onclick="adm('w')">Give weapon</button><select id="at"></select><button onclick="adm('s')">Set status</button></div></div>
 <div id="set" class="pn" style="display:none;z-index:9"><div class="card"><h1 style="font-size:34px">Settings</h1>
@@ -430,7 +430,7 @@ if(SD){const b=document.createElement('div');b.id='sev';b.className='hb';b.textC
 
 // ---------- Controls menu ----------
 {const d=document.createElement('div');d.id='ctl';d.className='pn';d.style.cssText='display:none;z-index:12';
- d.innerHTML='<div class="card"><h1 style="font-size:32px">🎮 Controls</h1><table><tr><td>W A S D</td><td>Move</td></tr><tr><td>Drag mouse</td><td>Look around</td></tr><tr><td>Space</td><td>Jump</td></tr><tr><td>E (tap)</td><td>Buy / steal / shop / lock / elevator</td></tr><tr><td>E (hold)</td><td>Sell nearby Sahur</td></tr><tr><td>X</td><td>Sell nearby Sahur</td></tr><tr><td>1 – 9</td><td>Swap hotbar item</td></tr><tr><td>F</td><td>Use held item (swing / shoot)</td></tr><tr><td>G</td><td>Fire gun</td></tr><tr><td>/ · P</td><td>Admin command bar · admin panel</td></tr></table><button onclick="this.closest(\'.pn\').style.display=\'none\'">Close</button></div>';document.body.appendChild(d);
+ d.innerHTML='<div class="card"><h1 style="font-size:32px">🎮 Controls</h1><table><tr><td>W A S D</td><td>Move</td></tr><tr><td>Drag mouse</td><td>Look around</td></tr><tr><td>Space</td><td>Jump</td></tr><tr><td>E (tap)</td><td>Buy / steal / shop / lock / elevator</td></tr><tr><td>E (hold)</td><td>Sell nearby Sahur</td></tr><tr><td>X</td><td>Sell nearby Sahur</td></tr><tr><td>1 – 9</td><td>Swap hotbar item</td></tr><tr><td>F</td><td>Use held item (swing / shoot)</td></tr><tr><td>G</td><td>Fire gun</td></tr><tr><td>P</td><td>Open the admin control panel</td></tr></table><button onclick="this.closest(\'.pn\').style.display=\'none\'">Close</button></div>';document.body.appendChild(d);
  const c=$('set').querySelector('.card'),b=document.createElement('button');b.className='g';b.textContent='🎮 Controls';b.onclick=()=>d.style.display='flex';c.insertBefore(b,c.lastElementChild)}
 
 // ---------- Admin tools: no local anti-cheat penalties ----------
@@ -2202,6 +2202,109 @@ N.H.clearworld=p=>{if(!p||!p.from)return;N.verifyAdmin(p.from).then(ok=>{if(ok)c
 /* Keep the P-key panel separate from the old slash/Enter command prompt. */
 const adminPanel=$('sasAdminPanel');
 if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)title.textContent='👑 ADMIN CONTROL CENTER · P';}
+})();
+</script>
+
+
+
+<!-- SAS v3.2 ADMIN PANEL + HUD LAYOUT REPAIR -->
+<style id="SAS_V32_LAYOUT_FIX">
+/* Retire the obsolete slash command bar and mini admin panel. */
+#cmd,#adm{display:none!important;visibility:hidden!important;pointer-events:none!important}
+/* Put the single P-key admin panel in a clear, bounded area with its own scroll. */
+#sasAdminPanel{
+ position:fixed!important;left:auto!important;right:clamp(8px,2vw,24px)!important;
+ top:50%!important;bottom:auto!important;inset-inline-start:auto!important;
+ width:min(790px,calc(100vw - 24px))!important;height:auto!important;
+ max-height:88vh!important;transform:translateY(-50%)!important;
+ margin:0!important;padding:0!important;display:none!important;
+ align-items:stretch!important;justify-content:flex-end!important;
+ background:transparent!important;backdrop-filter:none!important;
+ pointer-events:none!important;z-index:10040!important;
+}
+#sasAdminPanel.show{display:flex!important}
+#sasAdminPanel .sasx-card{
+ width:100%!important;max-height:88vh!important;min-height:0!important;
+ overflow:auto!important;overscroll-behavior:contain!important;
+ padding:clamp(10px,1.5vw,18px)!important;
+ background:linear-gradient(145deg,rgba(23,35,68,.98),rgba(5,10,25,.98))!important;
+ border:1px solid #ffffff45!important;border-radius:16px!important;
+ box-shadow:0 18px 65px #000d!important;pointer-events:auto!important;
+}
+#sasAdminPanel .sasx-tabs{position:sticky!important;top:0!important;z-index:5!important;background:#111b32!important;display:flex!important;flex-wrap:wrap!important;gap:3px!important;padding:7px!important;border-radius:10px!important}
+#sasAdminPanel .sasx-tabs button{font-size:12px!important;padding:7px 9px!important;margin:1px!important;white-space:normal!important}
+#sasAdminCommandDirectory{display:none;max-height:none!important;overflow:visible!important;min-width:0!important}
+#sasAdminCommandDirectory .sasCmdGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+#sasAdminCommandDirectory .sasCmdItem{min-width:0!important;overflow-wrap:anywhere!important}
+#sasAdminCommandDirectory input{width:100%!important;max-width:100%!important;min-width:0!important}
+#sasAdminCommandDirectory .sasCmdItem button{max-width:100%!important;white-space:normal!important}
+/* Keep HUD labels, announcements, chat and admin access in separate screen zones. */
+#hud>.hb{max-width:min(46vw,520px)}
+#hud>.hb[style*="bottom:14px"]{left:50%!important;right:auto!important;bottom:8px!important;transform:translateX(-50%)!important;max-width:94vw!important;white-space:normal!important;text-align:center!important;font-size:clamp(11px,1.5vw,14px)!important;padding:5px 9px!important}
+#sasAdminDock{position:fixed!important;right:14px!important;bottom:14px!important;top:auto!important;z-index:10041!important}
+#sasAdminDock button{max-width:190px!important;font-size:12px!important;padding:8px 11px!important}
+#sasChatToggle{left:14px!important;bottom:14px!important;z-index:10042!important}
+#sasChatPanel{left:14px!important;bottom:58px!important;z-index:10043!important;max-height:42vh!important}
+#sasEventBanner.on{top:12px!important;max-width:min(560px,92vw)!important;font-size:clamp(12px,1.8vw,17px)!important;padding:8px 12px!important}
+#sasAnn2.on{top:58px!important;max-width:min(560px,92vw)!important;font-size:clamp(12px,1.8vw,17px)!important;padding:8px 12px!important}
+#sasEvPill{top:auto!important;bottom:66px!important;left:50%!important;transform:translateX(-50%)!important;max-width:90vw!important;white-space:normal!important;text-align:center!important}
+@media(max-width:700px){
+ #sasAdminPanel{left:6px!important;right:6px!important;top:50%!important;width:auto!important;max-height:84vh!important;transform:translateY(-50%)!important}
+ #sasAdminPanel .sasx-card{max-height:84vh!important;padding:9px!important}
+ #sasAdminCommandDirectory .sasCmdGrid{grid-template-columns:minmax(0,1fr)!important}
+ #sasAdminDock{right:8px!important;bottom:8px!important}
+ #sasChatToggle{left:8px!important;bottom:8px!important}
+ #sasChatPanel{left:8px!important;bottom:52px!important;width:min(320px,calc(100vw - 16px))!important;height:min(38vh,320px)!important}
+ #sasEvPill{bottom:58px!important;font-size:11px!important}
+ #sasAnn2.on{top:52px!important}
+}
+</style>
+<script id="SAS_V32_ADMIN_PANEL_REPAIR">
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const isAdmin=()=>{try{return typeof isAdm==='function'&&!!isAdm()}catch{return false}};
+ const panel=$('sasAdminPanel'),dock=$('sasAdminDock');
+ // Ensure there is exactly one visible admin entry point. Clone the dock button to
+ // remove the conflicting older capture/property click handlers.
+ if(dock){
+   const old=dock.querySelector('button');
+   if(old){
+     const b=old.cloneNode(true);b.textContent='👑 ADMIN · P';
+     old.replaceWith(b);
+     b.addEventListener('click',e=>{
+       e.preventDefault();e.stopPropagation();
+       if(!isAdmin())return;
+       if(typeof G==='undefined'||!G){if(typeof toast==='function')toast('Join a server first');return;}
+       if(!panel)return;
+       const opening=!panel.classList.contains('show');
+       panel.classList.toggle('show',opening);
+       panel.style.setProperty('display',opening?'flex':'none','important');
+       if(opening)setTimeout(()=>{const tab=$('sasAllCommandsTab');if(tab)tab.click();},0);
+     });
+   }
+ }
+ // Keep P as the sole shortcut. The existing verified-admin capture handler opens
+ // the panel and selects All Commands; suppress the obsolete slash prompt here.
+ document.addEventListener('keydown',e=>{
+   if(e.code==='Slash'&&!e.target?.matches?.('input,textarea,select,[contenteditable="true"]')){
+     e.preventDefault();e.stopImmediatePropagation();
+   }
+ },true);
+ // Hide the old command console and ensure the searchable command directory is
+ // the first page shown whenever the admin panel opens.
+ const openObserver=()=>{
+   if(!panel)return;
+   if(panel.classList.contains('show')){
+     const dir=$('sasAdminCommandDirectory');
+     const tab=$('sasAllCommandsTab');
+     if(dir&&tab&&dir.style.display!=='block')setTimeout(()=>tab.click(),0);
+   }
+ };
+ if(panel&&typeof MutationObserver!=='undefined')new MutationObserver(openObserver).observe(panel,{attributes:true,attributeFilter:['class']});
+ const legacy=$('cmd');if(legacy){legacy.value='';legacy.style.display='none'}
+ const oldMini=$('adm');if(oldMini)oldMini.style.display='none';
+ // Remove stale shortcut references in any remaining controls/help text.
+ document.querySelectorAll('#ctl td').forEach(td=>{if(/admin command bar/i.test(td.textContent))td.textContent='Open the admin control panel'});
 })();
 </script>
 
