@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sas-build="3.4.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
+<html lang="en" data-sas-build="3.7.0-online"><head><meta charset="utf-8"><title>Steal a Sahur</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -23,7 +23,7 @@ button.g{background:#ffffff25;color:#fff}button:disabled{opacity:.4;pointer-even
 #adm{max-height:80vh;overflow:auto;position:absolute;right:12px;top:70px;display:none;pointer-events:auto;background:#000c;border:2px solid gold;border-radius:14px;padding:12px;width:230px}
 #adm *{width:100%;margin:3px 0}
 </style></head><body>
-<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 3.4.0</p>
+<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 3.7.0</p>
 <input id="u" placeholder="Username" maxlength="16"><input id="em" type="email" placeholder="Email (to register)"><input id="p" type="password" placeholder="Password"><label style="font-size:15px"><input type="checkbox" id="rob" style="width:auto"> I'm not a robot: <b id="q"></b> = <input id="qa" style="width:56px;padding:4px"></label>
 <div><button onclick="auth(0)">Log in</button><button class="g" onclick="auth(1)">Register</button></div><p id="am" style="color:#ff8080"></p></div></div>
 <div id="menu" class="pn" style="display:none"><div class="card" style="width:min(780px,94vw)"><h1>Pick a server</h1><p id="wl"></p><p id="sb" style="color:#ffd34d"></p>
@@ -217,8 +217,8 @@ function start(label,count){CS=0;$('menu').style.display='none';$('hud').style.d
  for(let n=0;n<count;n++){const bot=n>0,a={bot,name:bot?BN[n]:acc.name+(data.status!='player'?' ['+data.status.toUpperCase()+']':''),base:ord[n],coins:bot?200:data.coins,lv:bot?n%3:(data.lv||0),inv:[],carry:null,lock:0,vy:0,st:'buy',cd:15+Math.random()*20,chase:0};
   for(let j=0;j<SLOTS[a.lv];j++){const v=!bot&&data.inv[j];a.inv[j]=v?{i:v[0],r:v[1]}:null}
   a.m=person(bot?new THREE.Color().setHSL(Math.random(),.6,.5):0xff4d4d,a.name);const b=BP(a.base);a.m.position.set(b.x,0,b.z+DIR(a.base)*6);world.add(a.m);ag.push(a);refresh(a)}
- ag[0].sp=isDev()&&data.set.spd?data.set.spd:0;G=1;applyGfx();signs();if(isAdm()){$('as').innerHTML=SA.map((s,i)=>'<option value="'+i+'">'+s[0]+'</option>').join('')}hud()}
-function leave(){save();G=null;$('hud').style.display='none';$('adm').style.display='none';$('menu').style.display='flex';menu()}
+ ag[0].sp=isDev()&&data.set.spd?data.set.spd:0;G=1;window.sasGameReady=true;applyGfx();signs();if(isAdm()){$('as').innerHTML=SA.map((s,i)=>'<option value="'+i+'">'+s[0]+'</option>').join('')}hud()}
+function leave(){save();G=null;window.sasGameReady=false;$('sasAdminPanel')?.classList.remove('show');$('sasAdminPanel')?.style.setProperty('display','none','important');$('hud').style.display='none';$('adm').style.display='none';$('menu').style.display='flex';menu()}
 function save(){const m=ag[0];data.coins=Math.floor(m.coins);data.inv=m.inv.map(v=>v&&[v.i,v.r]);persist()}
 function hud(){const m=ag[0],i=income(m);$('coins').textContent=fmt(m.coins);$('inc').textContent=fmt(i);data.bestInc=Math.max(data.bestInc||0,i);data.best=Math.max(data.best||0,...m.inv.map(v=>v?SA[v.i][3]*(v.r==8?10:1):0));$('rk').innerHTML=badge(data.rp)+' · '+fmt(data.rp)+' RP'+(Date.now()<(data.luckEnd||0)?' · 🍀×'+fmt(data.luckM):'')}
 function agive(){const m=ag[0],j=m.inv.indexOf(null);if(j<0)return toast('Base full');m.inv[j]={i:+$('as').value,r:8};refresh(m);hud();toast('⭐ Admin Sahur granted')}
@@ -699,7 +699,7 @@ leave=function(){setAim(false);setShift(false);oldLeave()};
 })();
 </script>
 <script>
-/* Steal a Sahur 1.3.0 animated intro. */
+/* Steal a Sahur 3.7.0 animated intro. */
 (()=>{
  const css=document.createElement('style');css.textContent=`
  #sasIntro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#283c7a 0%,#11182f 48%,#070b18 100%);transition:opacity .65s ease,visibility .65s ease}
@@ -720,7 +720,7 @@ leave=function(){setAim(false);setShift(false);oldLeave()};
  @keyframes sasDot{to{transform:translateY(-7px);opacity:.45}}
  @media(prefers-reduced-motion:reduce){#sasIntro *,#sasIntro *:before{animation:none!important;transition:none!important}}
  `;document.head.appendChild(css);
- const intro=document.createElement('div');intro.id='sasIntro';intro.innerHTML=`<div class="glow"></div><div class="introCard"><div class="sub">Welcome to</div><h1>STEAL A SAHUR</h1><div class="sub">Build · Collect · Protect · Steal</div><div class="versions"><span>STEAL A SAHUR 1.3.0</span><span>ANTICHEAT 1.0.2 · SERVER AUTH REQUIRED</span></div><p style="color:#d6def5;line-height:1.5">Your Sahur empire starts here.</p><div class="dots"><i></i><i></i><i></i></div><button id="sasEnter">PLAY NOW</button></div>`;
+ const intro=document.createElement('div');intro.id='sasIntro';intro.innerHTML=`<div class="glow"></div><div class="introCard"><div class="sub">Welcome to</div><h1>STEAL A SAHUR</h1><div class="sub">Build · Collect · Protect · Steal</div><div class="versions"><span>GAME VERSION 3.7.0</span><span>ANTICHEAT 1.0.2 · SERVER AUTH REQUIRED</span></div><p style="color:#d6def5;line-height:1.5">Your Sahur empire starts here.</p><div class="dots"><i></i><i></i><i></i></div><button id="sasEnter">PLAY NOW</button></div>`;
  document.body.appendChild(intro);
  const enter=()=>{intro.classList.add('hide');setTimeout(()=>intro.remove(),700)};
  intro.querySelector('#sasEnter').addEventListener('click',enter);
@@ -1299,7 +1299,7 @@ window.auth=async function(reg){
   }
  }catch(e){console.error(e);say(e.message||'Authentication failed')}
 };
-window.logout=async function(){try{if(currentUser)await cloudSave();if(presenceChannel)await client.removeChannel(presenceChannel);await client.auth.signOut()}catch(e){console.warn(e)}currentUser=null;profile=null;acc=null;data=null;$id('menu').style.display='none';$id('auth').style.display='flex';say('')};
+window.logout=async function(){try{if(currentUser)await cloudSave();if(presenceChannel)await client.removeChannel(presenceChannel);await client.auth.signOut()}catch(e){console.warn(e)}currentUser=null;profile=null;acc=null;data=null;G=null;window.sasGameReady=false;$id('sasAdminPanel')?.classList.remove('show');$id('sasAdminPanel')?.style.setProperty('display','none','important');$id('hud').style.display='none';$id('menu').style.display='none';$id('auth').style.display='flex';say('')};
 window.socOpen=function(){$id('soc').style.display='flex';window.socR()};
 window.soc=async function(kind){
  if(!currentUser)return say('Log in first');
@@ -1343,24 +1343,7 @@ const help=document.createElement('small');help.style.cssText='opacity:.8;max-wi
 <!-- Legacy partial Realtime V2 removed: use the room-server addon instead. -->
 
 <!-- ADMIN PANEL ACCESS REPAIR: Supabase profiles.role remains the authority. -->
-<script id="SAS_ADMIN_PANEL_ACCESS_REPAIR">
-(()=>{'use strict';
- // This compatibility layer only keeps the legacy admin dock visibility in sync.
- // It intentionally does NOT register a P-key or dock-click handler: v3.4 owns both.
- const isAdminNow=()=>{
-   try{return !!(typeof isAdm==='function'&&isAdm()) || String(data?.status||acc?.d?.status||'').toLowerCase()==='admin'}catch{return false}
- };
- const dock=document.getElementById('sasAdminDock');
- const sync=()=>{
-   const allowed=isAdminNow()&&typeof G!=='undefined'&&!!G;
-   if(!dock)return;
-   dock.style.setProperty('display',allowed?'block':'none','important');
-   dock.style.setProperty('visibility',allowed?'visible':'hidden','important');
-   dock.style.setProperty('z-index','199999','important');
- };
- sync();setInterval(sync,700);
-})();
-</script>
+
 <script id="SAS_V251">
 /* Steal a Sahur v2.5.1 add-on */
 (()=>{'use strict';
@@ -1693,7 +1676,7 @@ addEventListener('keydown',hnd,true);addEventListener('click',hnd,true);
  b.onclick=()=>{others.forEach(x=>x.classList.remove('active'));b.classList.add('active');P.querySelectorAll('[data-page],#sasModPage').forEach(p=>p.style.display='none');pg.style.display='block'};
  others.forEach(x=>x.addEventListener('click',()=>{b.classList.remove('active');pg.style.display='none'}))})();
 window.SASNET={H,send,vAdm,ann,rem,uid,isHost,pres:()=>pres,invNow,isVerifiedAdmin:id=>!!verOk[id],verifyAdmin:vAdm,roomKey:()=>String(R?.topic||"sas-room"),setLuck:(m,min)=>{ev={m:Math.min(1e6,Math.max(1,m)),until:Date.now()+min*6e4}},inRoom:()=>!!R};
-const ap=document.querySelector('#auth p');if(ap)ap.textContent='STEAL A SAHUR V 3.4.0 · ONLINE';
+const ap=document.querySelector('#auth p');if(ap)ap.textContent='STEAL A SAHUR V 3.7.0 · ONLINE';
 })();
 </script>
 <script id="SAS_ONLINE_V27">
@@ -2230,54 +2213,7 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  #sasAnn2.on{top:52px!important}
 }
 </style>
-<script id="SAS_V32_ADMIN_PANEL_REPAIR">
-(()=>{'use strict';
- const $=id=>document.getElementById(id);
- const isAdmin=()=>{try{return !!((typeof isAdm==='function'&&isAdm())||String(data?.status||acc?.d?.status||'').trim().toLowerCase()==='admin')}catch{return false}};
- const panel=$('sasAdminPanel'),dock=$('sasAdminDock');
- // Ensure there is exactly one visible admin entry point. Clone the dock button to
- // remove the conflicting older capture/property click handlers.
- if(dock){
-   const old=dock.querySelector('button');
-   if(old){
-     const b=old.cloneNode(true);b.textContent='👑 ADMIN · P';
-     old.replaceWith(b);
-     b.addEventListener('click',e=>{
-       e.preventDefault();e.stopPropagation();
-       if(!isAdmin())return;
-       if(typeof G==='undefined'||!G){if(typeof toast==='function')toast('Join a server first');return;}
-       if(!panel)return;
-       const opening=!panel.classList.contains('show');
-       panel.classList.toggle('show',opening);
-       panel.style.setProperty('display',opening?'flex':'none','important');
-       if(opening)setTimeout(()=>{const tab=$('sasAllCommandsTab');if(tab)tab.click();},0);
-     });
-   }
- }
- // Keep P as the sole shortcut. The existing verified-admin capture handler opens
- // the panel and selects All Commands; suppress the obsolete slash prompt here.
- document.addEventListener('keydown',e=>{
-   if(e.code==='Slash'&&!e.target?.matches?.('input,textarea,select,[contenteditable="true"]')){
-     e.preventDefault();e.stopImmediatePropagation();
-   }
- },true);
- // Hide the old command console and ensure the searchable command directory is
- // the first page shown whenever the admin panel opens.
- const openObserver=()=>{
-   if(!panel)return;
-   if(panel.classList.contains('show')){
-     const dir=$('sasAdminCommandDirectory');
-     const tab=$('sasAllCommandsTab');
-     if(dir&&tab&&dir.style.display!=='block')setTimeout(()=>tab.click(),0);
-   }
- };
- if(panel&&typeof MutationObserver!=='undefined')new MutationObserver(openObserver).observe(panel,{attributes:true,attributeFilter:['class']});
- const legacy=$('cmd');if(legacy){legacy.value='';legacy.style.display='none'}
- const oldMini=$('adm');if(oldMini)oldMini.style.display='none';
- // Remove stale shortcut references in any remaining controls/help text.
- document.querySelectorAll('#ctl td').forEach(td=>{if(/admin command bar/i.test(td.textContent))td.textContent='Open the admin control panel'});
-})();
-</script>
+
 
 
 
@@ -2427,6 +2363,7 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  function dispatch(raw,where='v33CommandStatus'){
   const command=String(raw||'').trim().replace(/^\/+/, '');if(!command){showStatus(where,'Enter a command first.');return}
   if(!isAdmin()){showStatus(where,'Admin role is required.');notify('Admin only');return}
+  if(typeof G==='undefined'||!G){showStatus(where,'Join a game server first.');return}
   if(/^clearbrainrots(?:\s|$)/i.test(command)){
    const target=command.replace(/^clearbrainrots\s*/i,'');
    if(typeof window.sasClearPlayerBrainrots!=='function'){showStatus(where,'Clear command handler is unavailable.');return}
@@ -2471,7 +2408,7 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  $('v33RainBtn').onclick=()=>dispatch('rain '+Math.max(1,+$('v33Rain').value||1000000),'v33EventStatus');
  $('v33BoomBtn').onclick=()=>dispatch('boom '+Math.max(1,Math.min(100,+$('v33BoomRadius').value||25)),'v33EventStatus');
  function closePanel(){panel.classList.remove('show');panel.style.setProperty('display','none','important')}
- function openPanel(){if(!isAdmin()){notify('Admin access requires the Supabase admin role.');return}panel.classList.add('show');panel.style.setProperty('display','flex','important');goTab('home');syncStats()}
+ function openPanel(){if(!isAdmin()){notify('Admin access requires the Supabase admin role.');return}if(typeof G==='undefined'||!G){notify('Join a game server first.');return}panel.classList.add('show');panel.style.setProperty('display','flex','important');goTab('commands');syncStats()}
  function togglePanel(){if(panel.classList.contains('show'))closePanel();else openPanel()}
  // Replace the dock node so old click handlers cannot toggle the panel twice.
  const oldButton=dock.querySelector('button');if(oldButton){const b=oldButton.cloneNode(true);b.textContent='👑 ADMIN · P';oldButton.replaceWith(b);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();togglePanel()})}
@@ -2495,8 +2432,6 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  goTab('home');
 })();
 </script>
-
-</body></html>
 
 
 <!-- SAS v3.4: P-panel key ownership, command aliases, rare verified-admin arrival spectacle -->
@@ -2529,25 +2464,6 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  const admin=()=>{try{return !!((typeof isAdm==='function'&&isAdm())||String(data?.status||acc?.d?.status||'').trim().toLowerCase()==='admin')}catch{return false}};
  const notify=m=>{try{if(typeof toast==='function')toast(m);else console.info(m)}catch{console.info(m)}};
  if(!panel||!dock){console.error('SAS v3.4: admin panel shell missing');return}
- // Take sole ownership of P. Earlier compatibility scripts no longer capture it.
- window.addEventListener('keydown',e=>{
-   if(e.code==='KeyP'&&!e.repeat&&!e.target?.matches?.('input,textarea,select,[contenteditable="true"]')){
-     e.preventDefault();e.stopImmediatePropagation();
-     if(!admin()){notify('Admin access requires the AdminTung admin role.');return}
-     const open=!panel.classList.contains('show');
-     panel.classList.toggle('show',open);
-     panel.style.setProperty('display',open?'flex':'none','important');
-     panel.style.setProperty('visibility',open?'visible':'hidden','important');
-     if(open){const first=$('sasV33Root')?.querySelector('[data-v33tab="home"]');first?.click();}
-   }
-   if(e.key==='Escape'&&panel.classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();panel.classList.remove('show');panel.style.setProperty('display','none','important')}
- },true);
- // Dock click is also wired once, replacing all legacy inline/property handlers.
- const old=dock.querySelector('button');
- if(old){const b=old.cloneNode(true);b.textContent='👑 ADMIN · P';old.replaceWith(b);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!admin())return notify('Admin only');const open=!panel.classList.contains('show');panel.classList.toggle('show',open);panel.style.setProperty('display',open?'flex':'none','important');panel.style.setProperty('visibility',open?'visible':'hidden','important')})}
- const sync=()=>{const allowed=admin()&&typeof G!=='undefined'&&!!G;dock.style.setProperty('display',allowed?'block':'none','important');dock.style.setProperty('visibility',allowed?'visible':'hidden','important')};sync();setInterval(sync,700);
- // Legacy in-game P panel is permanently retired.
- const mini=$('adm');if(mini){mini.style.setProperty('display','none','important');mini.setAttribute('aria-hidden','true')}
  // Server command directory: aliases that the original dispatcher didn't normalize are mapped here.
  const oldRun=window.sasRunAdminCommand;
  window.sasRunAdminCommand=function(raw){
@@ -2583,3 +2499,5 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  },900);
 })();
 </script>
+
+</body></html>
