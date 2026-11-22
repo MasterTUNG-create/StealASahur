@@ -23,7 +23,7 @@ button.g{background:#ffffff25;color:#fff}button:disabled{opacity:.4;pointer-even
 #adm{max-height:80vh;overflow:auto;position:absolute;right:12px;top:70px;display:none;pointer-events:auto;background:#000c;border:2px solid gold;border-radius:14px;padding:12px;width:230px}
 #adm *{width:100%;margin:3px 0}
 </style></head><body>
-<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 2.1.3</p>
+<div id="auth" class="pn"><div class="card"><h1>STEAL A SAHUR</h1><p>STEAL A SAHUR V 2.5.1</p>
 <input id="u" placeholder="Username" maxlength="16"><input id="em" type="email" placeholder="Email (to register)"><input id="p" type="password" placeholder="Password"><label style="font-size:15px"><input type="checkbox" id="rob" style="width:auto"> I'm not a robot: <b id="q"></b> = <input id="qa" style="width:56px;padding:4px"></label>
 <div><button onclick="auth(0)">Log in</button><button class="g" onclick="auth(1)">Register</button></div><p id="am" style="color:#ff8080"></p></div></div>
 <div id="menu" class="pn" style="display:none"><div class="card" style="width:min(780px,94vw)"><h1>Pick a server</h1><p id="wl"></p><p id="sb" style="color:#ffd34d"></p>
@@ -57,7 +57,7 @@ const RC=['#b8b8b8','#4ade80','#38bdf8','#c084fc','#fb923c','#f472b6','#ef4444',
 // name, rarity, price, income/s, scale
 const SA=[['Little Tung Sahur',0,25,1,.7],['Big Tung Sahur',1,100,4,1.3],['Triple T',2,400,15,1],['T³',3,1500,60,1.1],['Hood Triple T',4,6000,250,1.1],['Dark Sahur',6,25000,1200,1.5],['Admin Shadow Sahur',8,0,25000,1.8]];
 const WT=[50,28,13,6,2.5,.6],BN=['Noob_Sam','xX_Tung_Xx','BrainBoss','SahurFan99','Lira','KingTung','Ola','Bombardiro','Ballerina','Tralala'];
-const $=id=>document.getElementById(id),fmt=n=>{if(!isFinite(n))return '∞';if(n<1e3)return Math.floor(n);const F=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','UDc','DDc'],i=Math.min(13,Math.floor(Math.log10(n)/3));return (n/Math.pow(1000,i)).toFixed(2)+F[i]};
+const $=id=>document.getElementById(id),fmt=n=>{n=+n;if(!isFinite(n))return '∞';if(n<0)return '-'+fmt(-n);if(n<1e3)return ''+Math.floor(n);if(n>=1e42)return n.toExponential(2).replace('e+','e');const F=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','UDc','DDc'];let i=Math.min(13,Math.floor(Math.log10(n)/3)),v=n/Math.pow(1000,i);if(v>=999.995&&i<13){v/=1000;i++}return (+v.toFixed(2))+F[i]};
 let users=JSON.parse(localStorage.sas_users||'{}'),acc=null,data=null,G=null,ag=[],items=[],rb=[];
 const persist=()=>{localStorage.sas_users=JSON.stringify(users);if(window.sasCloudSchedule)window.sasCloudSchedule()},isAdm=()=>acc&&acc.d&&acc.d.status=='admin';
 const msg=t=>$('am').textContent=t;
@@ -220,7 +220,7 @@ function start(label,count){CS=0;$('menu').style.display='none';$('hud').style.d
  ag[0].sp=isDev()&&data.set.spd?data.set.spd:0;G=1;applyGfx();signs();if(isAdm()){$('as').innerHTML=SA.map((s,i)=>'<option value="'+i+'">'+s[0]+'</option>').join('')}hud()}
 function leave(){save();G=null;$('hud').style.display='none';$('adm').style.display='none';$('menu').style.display='flex';menu()}
 function save(){const m=ag[0];data.coins=Math.floor(m.coins);data.inv=m.inv.map(v=>v&&[v.i,v.r]);persist()}
-function hud(){const m=ag[0],i=income(m);$('coins').textContent=fmt(m.coins);$('inc').textContent=fmt(i);data.bestInc=Math.max(data.bestInc||0,i);data.best=Math.max(data.best||0,...m.inv.map(v=>v?SA[v.i][3]*(v.r==8?10:1):0));$('rk').innerHTML=badge(data.rp)+' · '+data.rp+' RP'+(Date.now()<(data.luckEnd||0)?' · 🍀×'+data.luckM:'')}
+function hud(){const m=ag[0],i=income(m);$('coins').textContent=fmt(m.coins);$('inc').textContent=fmt(i);data.bestInc=Math.max(data.bestInc||0,i);data.best=Math.max(data.best||0,...m.inv.map(v=>v?SA[v.i][3]*(v.r==8?10:1):0));$('rk').innerHTML=badge(data.rp)+' · '+fmt(data.rp)+' RP'+(Date.now()<(data.luckEnd||0)?' · 🍀×'+fmt(data.luckM):'')}
 function agive(){const m=ag[0],j=m.inv.indexOf(null);if(j<0)return toast('Base full');m.inv[j]={i:+$('as').value,r:8};refresh(m);hud();toast('⭐ Admin Sahur granted')}
 function acoin(){ag[0].coins+=1e6;hud()}
 function buy(a,it){const j=a.inv.indexOf(null),c=SA[it.i][2];if(j<0||a.coins<c)return 0;a.coins-=c;a.inv[j]={i:it.i,r:SA[it.i][1]};world.remove(it.m);items.splice(items.indexOf(it),1);refresh(a);return 1}
@@ -720,7 +720,7 @@ leave=function(){setAim(false);setShift(false);oldLeave()};
  @keyframes sasDot{to{transform:translateY(-7px);opacity:.45}}
  @media(prefers-reduced-motion:reduce){#sasIntro *,#sasIntro *:before{animation:none!important;transition:none!important}}
  `;document.head.appendChild(css);
- const intro=document.createElement('div');intro.id='sasIntro';intro.innerHTML=`<div class="glow"></div><div class="introCard"><div class="sub">Welcome to</div><h1>STEAL A SAHUR</h1><div class="sub">Build · Collect · Protect · Steal</div><div class="versions"><span>GAME UPDATE V 2.1.3</span></div><p style="color:#d6def5;line-height:1.5">Your Sahur empire starts here.</p><div class="dots"><i></i><i></i><i></i></div><button id="sasEnter">PLAY NOW</button></div>`;
+ const intro=document.createElement('div');intro.id='sasIntro';intro.innerHTML=`<div class="glow"></div><div class="introCard"><div class="sub">Welcome to</div><h1>STEAL A SAHUR</h1><div class="sub">Build · Collect · Protect · Steal</div><div class="versions"><span>GAME UPDATE V 2.5.1</span></div><p style="color:#d6def5;line-height:1.5">Your Sahur empire starts here.</p><div class="dots"><i></i><i></i><i></i></div><button id="sasEnter">PLAY NOW</button></div>`;
  document.body.appendChild(intro);
  const enter=()=>{intro.classList.add('hide');setTimeout(()=>intro.remove(),700)};
  intro.querySelector('#sasEnter').addEventListener('click',enter);
@@ -759,7 +759,7 @@ leave=function(){setAim(false);setShift(false);oldLeave()};
 </script>
 
 <style>.pn{background:radial-gradient(circle at 50% 25%,#4b3a9a,#0b0f22 70%)!important}#auth h1{animation:fl 3s ease-in-out infinite alternate;font-size:56px}#auth .card{border-color:#ffd34d66;box-shadow:0 0 60px #7a3bff55}</style><script>
-/* Steal a Sahur — Addon V 2.1.3 (load AFTER the game scripts) */
+/* Steal a Sahur — Addon V 2.5.1 (load AFTER the game scripts) */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},wr=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),ix=n=>SA.findIndex(x=>x[0]==n);
@@ -854,7 +854,7 @@ function collect(d){const me=ag[0];if(d.kind=='cash'){me.coins+=d.v;toast('💵 
 
 /* ---------- Tick hook: announcements, drops, flight, playtime ---------- */
 const _tick=tick;tick=function(dt){_tick(dt);if(!G||!ag[0])return;const me=ag[0],mp=me.m.position,now=performance.now();
- for(const it of items)if(!it.s){it.s=1;const x=SA[it.i];if(x[3]>=1e12){const m=x[0]+' ('+fmt(x[3])+'/s) just spawned in '+$('sn').textContent.split(' · ')[0]+'!';banner(m,'GLOBAL',1);NET.send('ann',{m,from:'GLOBAL',k:1})}}
+ for(const it of items)if(!it.s){it.s=1;const x=SA[it.i];if(false){const m=x[0]+' ('+fmt(x[3])+'/s) just spawned in '+$('sn').textContent.split(' · ')[0]+'!';banner(m,'GLOBAL',1);NET.send('ann',{m,from:'GLOBAL',k:1})}}
  for(let i=DR.length-1;i>=0;i--){const d=DR[i];d.g.rotation.y+=dt*(d.kind=='cash'?0:1.4);d.g.position.y=d.kind=='cash'?0:.3+Math.sin(now/400+d.ph)*.25;if(now>d.exp||Math.hypot(d.g.position.x-mp.x,d.g.position.z-mp.z)<2.6&&collect(d)||now>d.exp){world.remove(d.g);DR.splice(i,1)}}
  if(FLY&&isAdm()){me.vy=0;fy=cl(fy+((keys.Space?1:0)-(keys.KeyC?1:0))*18*dt,0,60);mp.y=fy}};
 addEventListener('keydown',e=>{if(e.target.tagName=='INPUT'||!G||!isAdm())return;if(e.code=='KeyV')flight(!FLY)});
@@ -1115,7 +1115,7 @@ $('sasGiveSahur').onclick=()=>{if(!adminGuard())return;const a=targetPlayer($('s
 let abuseUntil=0,abuseMult=1,eventHud=true,rewardDrops=[];
 const oldSpawnWeights=lw;
 lw=function(){const w=oldSpawnWeights();return Date.now()<abuseUntil?w.map((v,i)=>i>=6?v*abuseMult:v):w};
-function spawnRewardDrop(kind,value){
+function spawnRewardDrop(kind,value){if(window.sasDropHook&&window.sasDropHook(kind,value))return;
  if(!G||!world||!me())return;
  const g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({color:kind==='cash'?0x36d66b:kind==='gift'?0xffd34d:0x9b7bff,emissive:kind==='cash'?0x145522:0x35205c});
  const shape=new THREE.Mesh(kind==='cash'?new THREE.BoxGeometry(1.4,.35,1):new THREE.OctahedronGeometry(.85),mat);g.add(shape);
@@ -1491,5 +1491,158 @@ window.addEventListener('beforeunload',()=>{if(room){try{room.untrack()}catch{}}
  sync();
  setInterval(sync,350);
 })();
+</script>
+<script id="SAS_V251">
+/* Steal a Sahur v2.5.1 add-on */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),sb=window.sasSupabase,uid=()=>window.sasCurrentUserId,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const touch=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;
+const nm=n=>String(n||'').replace(/^#/,'').trim().toLowerCase(),base=s=>String(s).toLowerCase().replace(/ \[.*\]$/,'');
+const ix=n=>SA.findIndex(x=>x[0]===n),n2=a=>a.map(ix).filter(i=>i>=0);
+const css=document.createElement('style');css.textContent=`
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#ffffff40;border-radius:8px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #ffd34d;outline-offset:2px}
+.hb{font-size:clamp(13px,2.3vw,19px)}
+#sasAnn2{position:fixed;left:50%;top:-140px;transform:translateX(-50%);z-index:120;max-width:92vw;padding:12px 24px;border-radius:16px;font-size:clamp(14px,3.4vw,21px);font-weight:700;text-align:center;color:#fff;border:2px solid #fff;transition:top .5s cubic-bezier(.2,1.4,.4,1);pointer-events:none}
+#sasAnn2.s{background:linear-gradient(90deg,#1d4ed8,#06b6d4);box-shadow:0 0 30px #06b6d4aa}
+#sasAnn2.g{background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b);box-shadow:0 0 40px #ec4899cc}
+#sasAnn2.on{top:64px}
+#sasScare{position:fixed;inset:0;z-index:500;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;box-shadow:inset 0 0 160px 60px #a00}
+#sasScare svg{width:min(80vw,80vh);animation:scz 2.4s ease-out forwards}#sasScare b{color:#f33;font-size:32px;margin-top:10px}
+@keyframes scz{0%{transform:scale(.1)}12%{transform:scale(1.1) rotate(-3deg)}30%{transform:scale(1.25) rotate(3deg)}60%{transform:scale(1.3) rotate(-2deg)}100%{transform:scale(1.45)}}
+#sasKick{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;background:#090d1cf2}
+#sasHint{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);display:none;white-space:nowrap;border-color:#ffd34d!important}
+.sasRow{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.sasRow b{font-size:15px}
+#sasModPage input,#sasModPage select{width:100%}
+@media(max-width:700px){#hud>.hb[style*="bottom"],#sev,#sasEventHud{display:none!important}#lvb{width:min(230px,46vw)}
+#evt,#sevt{top:98px!important;left:auto!important;right:8px;transform:none!important;animation:none!important;font-size:12px!important}
+#abtn button{font-size:12px;padding:7px 9px}#hb2{bottom:10px}#sasAnn2.on{top:48px}}
+@media(pointer:coarse){#hud>.hb[style*="bottom"]{display:none!important}}`;document.head.appendChild(css);
+
+/* ---------- audio ---------- */
+let ac;const aud=()=>{try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();return ac}catch{return null}};
+function tone(f,d,ty='sine',v=.15,t0=0){const c=aud();if(!c)return;const o=c.createOscillator(),g=c.createGain(),t=c.currentTime+t0;o.type=ty;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d)}
+
+/* ---------- announcements: 100B+/s = server-wide, 1T+/s = global ---------- */
+const SRV=1e11,GLB=1e12;let srvCh=null,srvNo=null,ctl=null,bq=[],bb=0;
+const bn=document.createElement('div');bn.id='sasAnn2';document.body.appendChild(bn);
+function showAnn(m,g){bq.push([m,g]);if(!bb)nextAnn()}
+function nextAnn(){const q=bq.shift();if(!q){bb=0;return}bb=1;bn.className=(q[1]?'g':'s')+' on';bn.textContent=(q[1]?'🌍 GLOBAL · ':'📣 SERVER · ')+q[0];tone(660,.4);tone(880,.5,'sine',.15,.15);if(q[1])tone(1100,.6,'sine',.15,.3);setTimeout(()=>{bn.classList.remove('on');setTimeout(nextAnn,550)},q[1]?8000:6000)}
+const roleC={};
+async function isAdminId(id){if(id in roleC)return roleC[id];try{const{data:r}=await sb.from('profiles').select('role').eq('id',id).maybeSingle();return roleC[id]=String(r?.role||'').toLowerCase()==='admin'}catch{return false}}
+function ensureCtl(){if(ctl||!sb||!uid())return;ctl=sb.channel('sas-ctl-v1',{config:{broadcast:{self:false}}});
+ ctl.on('broadcast',{event:'gann'},({payload:p})=>p&&showAnn(String(p.m).slice(0,160),true));
+ ctl.on('broadcast',{event:'cmd'},({payload:p})=>onCmd(p));ctl.subscribe()}
+setInterval(ensureCtl,1500);
+function joinSrv(l){leaveSrv();const m=/Server\s+(\d+)/i.exec(l||'');if(!m||!sb||!uid())return;srvNo=+m[1];
+ srvCh=sb.channel('sas-ann-server-'+srvNo,{config:{broadcast:{self:false}}});
+ srvCh.on('broadcast',{event:'ann'},({payload:p})=>p&&showAnn(String(p.m).slice(0,160),false))
+  .on('broadcast',{event:'drop'},({payload:p})=>p&&G&&makeDrop(p,false)).on('broadcast',{event:'claim'},({payload:p})=>p&&rmDrop(p.id)).subscribe()}
+function leaveSrv(){if(srvCh){try{sb.removeChannel(srvCh)}catch{}}srvCh=null;srvNo=null}
+const sendCh=(ch,event,payload)=>{try{ch&&ch.send({type:'broadcast',event,payload})}catch(e){console.warn(e)}};
+function announceSpawn(x){const v=x[3],g=v>=GLB,m=x[0]+' ('+fmt(v)+'/s) just spawned in '+(srvNo?'Server '+srvNo:'Singleplayer')+'!';
+ showAnn(m,g);if(!srvNo)return;if(g)sendCh(ctl,'gann',{m});else sendCh(srvCh,'ann',{m})}
+
+/* ---------- admin commands: kick + jumpscare ---------- */
+async function onCmd(p){if(!p||!acc||Math.abs(Date.now()-p.t)>3e5||p.from===uid())return;
+ const to=nm(p.to);if(to!=='all'&&to!==base(acc.name))return;if(isAdm()||!(await isAdminId(p.from)))return;
+ if(p.k==='kick')kicked(p.reason);else if(p.k==='scare')scare(p.text)}
+const kick=document.createElement('div');kick.id='sasKick';kick.innerHTML='<div class="card" style="width:min(420px,92vw)"><h1 style="font-size:34px">👢 Kicked</h1><p id="sasKWhy"></p><button id="sasKOk">OK</button></div>';document.body.appendChild(kick);$('sasKOk').onclick=()=>kick.style.display='none';
+async function kicked(r){$('sasKWhy').textContent='Reason: '+(r||'No reason provided');kick.style.display='flex';
+ try{if(G)await window.leave()}catch{}try{await window.logout()}catch{}}
+function scare(t){const d=document.createElement('div');d.id='sasScare';
+ d.innerHTML='<svg viewBox="0 0 200 200"><ellipse cx="100" cy="100" rx="78" ry="90" fill="#e9e4d4"/><ellipse cx="68" cy="82" rx="22" ry="28" fill="#000"/><ellipse cx="132" cy="82" rx="22" ry="28" fill="#000"/><circle cx="68" cy="86" r="6" fill="#f00"/><circle cx="132" cy="86" r="6" fill="#f00"/><path d="M52 128 L70 166 L86 126 L102 170 L118 126 L134 166 L150 128 Q100 196 52 128Z" fill="#300"/></svg><b>'+esc(t||'')+'</b>';
+ document.body.appendChild(d);tone(90,1.4,'sawtooth',.3);tone(1800,.9,'square',.1);tone(2300,.9,'sawtooth',.08,.05);setTimeout(()=>d.remove(),2600)}
+
+/* ---------- 3D ground drops: cash piles + presents, claim with E ---------- */
+const DRS=[];let dseq=0;
+const LOOT={gold:[[5e4,5e5],n2(['Little Tung Sahur','Big Tung Sahur','Triple T','T³','Hood Triple T','Short Sahur'])],diamond:[[1e6,5e7],n2(['Dark Sahur','Diamond Sahur','Gold Sahur','Black Sahur','Toxic Sahur','Fish Sahur'])],platinum:[[1e8,5e9],n2(['Moon Sahur','Star Sahur','Hero Sahur','Lightning Sahur','Midnight Sahur','Pot Hotspot Sahur','Ta Sahur','Gohar Sahur'])]};
+const PC={gold:[0xffc933,0x6a4a00],diamond:[0x6ee7ff,0x0a5a77],platinum:[0xe8f0ff,0x6a4aff],sahur:[0xb266ff,0x35205c]};
+let billMat;const bill=()=>{if(!billMat){const c=document.createElement('canvas');c.width=64;c.height=32;const x=c.getContext('2d');x.fillStyle='#3fae5a';x.fillRect(0,0,64,32);x.strokeStyle='#d7ffd9';x.lineWidth=2;x.strokeRect(3,3,58,26);x.fillStyle='#d7ffd9';x.font='bold 20px sans-serif';x.textAlign='center';x.fillText('$',32,23);billMat=new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(c),roughness:.6})}return billMat};
+const flY=()=>{const m=ag[0];return[0,8,16][m.floor||(m.up?1:0)]||0};
+function makeDrop(o,bc){if(!G||!ag[0])return;const me=ag[0],p=me.m.position,g=new THREE.Group(),kind=o.kind==='gift'?'box':o.kind;let lid=null,v=o.v;
+ if(kind==='box'&&!LOOT[v])v='gold';
+ const id=o.id||(uid()||'l')+'-'+Date.now()+'-'+(dseq++),f=me.m.rotation.y,x=o.x??p.x+Math.sin(f)*2.4,z=o.z??p.z+Math.cos(f)*2.4,y=o.y??flY();
+ let L;
+ if(kind==='cash'){const n=cl(Math.round(10+Math.log10(v+1)*6),12,80);for(let i=0;i<n;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.2,.04,.6),bill()),k=i/n,r=(1-k)*1.3*Math.random();const a=Math.random()*6.28;b.position.set(Math.cos(a)*r,.05+k*.9+Math.random()*.1,Math.sin(a)*r);b.rotation.set((Math.random()-.5)*.25,Math.random()*6.28,(Math.random()-.5)*.25);b.castShadow=true;g.add(b)}
+  L=lab('💵 '+fmt(v),'E · Claim','#4ade80',4.4);L.position.y=2.8}
+ else{const c=PC[kind==='sahur'?'sahur':v],M=(a,e=0)=>new THREE.MeshStandardMaterial({color:a,emissive:e,roughness:.4,metalness:.25}),B=(w,h,d,m,px,py,pz)=>{const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);q.position.set(px,py,pz);q.castShadow=true;return q};
+  g.add(B(1.6,1.2,1.6,M(c[0],c[1]),0,.6,0),B(.3,1.22,1.62,M(0xdd2244,.2),0,.6,0),B(1.62,1.22,.3,M(0xdd2244,.2),0,.6,0));
+  lid=new THREE.Group();lid.position.y=1.3;lid.add(B(1.76,.3,1.76,M(c[0],c[1]),0,0,0),B(.32,.32,1.78,M(0xdd2244,.2),0,0,0),B(1.78,.32,.32,M(0xdd2244,.2),0,0,0));
+  for(const s of[-1,1]){const b=new THREE.Mesh(new THREE.TorusGeometry(.28,.09,8,16),M(0xdd2244,.3));b.position.set(s*.3,.4,0);b.rotation.y=Math.PI/2;lid.add(b)}g.add(lid);
+  L=kind==='sahur'?lab('🎁 '+SA[v][0],'E · Open',RC[SA[v][1]]||'#fff',4.6):lab('🎁 '+v[0].toUpperCase()+v.slice(1)+' gift','E · Open','#fff',4.4);L.position.y=3}
+ g.add(L);const ring=new THREE.Mesh(new THREE.TorusGeometry(1.6,.05,8,32),new THREE.MeshBasicMaterial({color:kind==='cash'?0x4ade80:0xffd34d}));ring.rotation.x=Math.PI/2;ring.position.y=.06;g.add(ring);
+ g.position.set(x,y,z);world.add(g);const exp=o.exp||(kind==='cash'?300:600);
+ DRS.push({id,g,kind,v,lid,ring,L,t:performance.now()+exp*1000,ph:Math.random()*6,open:0});
+ if(bc){sendCh(srvCh,'drop',{id,kind,v,x,y,z,exp});toast('📦 Drop placed — press E next to it to claim')}}
+function rmDrop(id){const i=DRS.findIndex(d=>d.id===id);if(i>=0){world.remove(DRS[i].g);DRS.splice(i,1)}}
+window.sasDropHook=(kind,v)=>{if(!G||!ag[0])return false;makeDrop({kind,v,exp:kind==='cash'?300:600},true);return true};
+window.sasDrop=(kind,v,exp)=>makeDrop({kind,v,exp},true);
+const near=()=>{if(!G||!ag[0])return null;const p=ag[0].m.position;let b=null,bd=3.8;for(const d of DRS){if(d.open)continue;const q=Math.hypot(d.g.position.x-p.x,d.g.position.z-p.z);if(q<bd&&Math.abs(d.g.position.y-p.y)<5){bd=q;b=d}}return b};
+function give(i){const me=ag[0],j=me.inv.indexOf(null);if(j<0){me.coins+=SA[i][2]/2;return toast('Base full — sold '+SA[i][0]+' for 🪙'+fmt(SA[i][2]/2))}me.inv[j]={i,r:i===ix('Hacked Sahur')?18:SA[i][1]};refresh(me);toast('🎁 You got '+SA[i][0]+'!')}
+function reward(d){const me=ag[0];if(d.kind==='cash'){me.coins+=d.v;toast('💵 +🪙'+fmt(d.v))}else if(d.kind==='sahur')give(d.v);
+ else{const L=LOOT[d.v],r=Math.random();if(r<.55){const c=Math.floor(L[0][0]+Math.random()*Math.random()*(L[0][1]-L[0][0]));me.coins+=c;toast('🎁 '+d.v+' gift: 🪙'+fmt(c))}else give(d.v==='platinum'&&Math.random()<.04&&ix('JOB Sahur')>=0?ix('JOB Sahur'):L[1][Math.random()*L[1].length|0])}hud()}
+function claim(d){sendCh(srvCh,'claim',{id:d.id});if(d.kind==='cash'){reward(d);rmDrop(d.id)}else d.open=.001}
+const _act=window.act;window.act=function(){const d=near();if(d)return claim(d);return _act()};
+
+/* ---------- index (chances, price, income) ---------- */
+const ip=document.createElement('div');ip.id='sasIdx';ip.className='sasx';
+ip.innerHTML='<div class="sasx-card"><h2>📚 Sahur Index & Conveyor Chances</h2><p>Live odds for the next conveyor spawn, including active luck events.</p><select id="sasIdxSort"><option value="p">Sort: chance</option><option value="i">Sort: income/s</option><option value="c">Sort: price</option><option value="r">Sort: rarity</option></select><div id="sasIdxList"></div><div style="text-align:right"><button class="secondary" id="sasIdxX">Close</button></div></div>';document.body.appendChild(ip);
+function renderIdx(){const w=lw(),sum=w.reduce((a,b)=>a+(isFinite(b)?Math.max(0,b):0),0),own=new Set([...(data?.inv||[]).filter(Boolean).map(v=>v[0]),...(ag[0]?.inv||[]).filter(Boolean).map(v=>v.i)]),k=$('sasIdxSort').value;
+ const L=SA.map((s,i)=>({s,i,p:sum?Math.max(0,w[i]||0)/sum:0})).sort((a,b)=>k==='i'?b.s[3]-a.s[3]:k==='c'?b.s[2]-a.s[2]:k==='r'?b.s[1]-a.s[1]||b.p-a.p:b.p-a.p);
+ $('sasIdxList').innerHTML=L.map(({s,i,p})=>{const pc=p*100,ch=p>0?(pc>=.01?pc.toFixed(2):pc.toPrecision(2))+'% · 1 in '+fmt(Math.round(1/p)):'Not spawning now';
+  return'<div class="sasx-row"><div class="sasRow"><b style="color:'+(RC[s[1]]||'#fff')+'">'+(own.has(i)?'✅ ':'🔒 ')+esc(s[0])+'</b><small>'+esc(RN[s[1]]||'Special')+'</small></div><small>🪙 '+(s[2]?fmt(s[2]):'Admin only')+' · earns +'+fmt(s[3])+'/s · 🎲 '+ch+'</small></div>'}).join('')}
+const openIdx=()=>{renderIdx();ip.classList.add('show')};$('sasIdxX').onclick=()=>ip.classList.remove('show');$('sasIdxSort').onchange=renderIdx;
+setInterval(()=>{if(ip.classList.contains('show'))renderIdx()},3000);
+{const m=$('menu')?.querySelector('.card'),sv=$('sv');if(m&&sv){const b=document.createElement('button');b.className='g';b.textContent='📚 Index & Chances';b.onclick=openIdx;sv.before(b)}
+ const ab=$('abtn');if(ab){const b=document.createElement('button');b.textContent='📚 Index';b.onclick=openIdx;ab.appendChild(b)}
+ for(const id of['sasChanceOpen','sasIndexOpen2']){const e=$(id);if(e)e.style.display='none'}
+ const sc=$('set')?.querySelector('.card');if(sc){const b=document.createElement('button');b.className='g';b.textContent='📚 Index & Chances';b.onclick=openIdx;sc.insertBefore(b,sc.lastElementChild);
+  $('ex')?.parentElement.remove();$('imf')?.remove();
+  const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;gap:8px';d.innerHTML='<label>📱 Mobile: auto-turn off Shiftlock <input type="checkbox" id="sasMso"></label><small>☁ Progress saves to your account automatically — log in on any device to continue.</small>';sc.insertBefore(d,sc.lastElementChild);
+  $('sasMso').onchange=()=>{if(data){data.set.mso=$('sasMso').checked;persist()}}}}
+
+/* ---------- hint + tick ---------- */
+const hint=document.createElement('div');hint.id='sasHint';hint.className='hb';$('hud').appendChild(hint);let shT=0;
+const _tick=window.tick;window.tick=function(dt){_tick(dt);if(!G||!ag[0])return;const now=performance.now();
+ for(const it of items){if(!it.pl){it.pl=1;const x=SA[it.i],s=x[4]||1,L=lab('🪙 '+(x[2]?fmt(x[2]):'Admin'),'','#ffd34d',3.4);L.position.y=(it.i==3?5.8:it.i==6?4.7:3)*s+(it.i==4?1:0)+1.6;it.m.add(L)}
+  if(!it.an){it.an=1;if(SA[it.i][3]>=SRV)announceSpawn(SA[it.i])}}
+ for(let i=DRS.length-1;i>=0;i--){const d=DRS[i];if(now>d.t){world.remove(d.g);DRS.splice(i,1);continue}
+  d.g.position.y=(d.g.position.y|0?d.g.position.y:d.g.position.y);d.ring.scale.setScalar(1+Math.sin(now/300+d.ph)*.08);
+  if(d.kind!=='cash'&&!d.open)d.g.rotation.y+=dt*.8;
+  if(d.open){d.open+=dt;d.lid.position.y+=dt*7;d.lid.rotation.z+=dt*5;d.L.visible=false;d.g.scale.setScalar(1+Math.sin(d.open*20)*.05);if(d.open>.7){reward(d);rmDrop(d.id)}}}
+ const n=near();hint.style.display=n?'block':'none';if(n)hint.textContent=(touch?'Tap Interact':'Press E')+' · '+(n.kind==='cash'?'claim 💵 '+fmt(n.v):'open 🎁');
+ const sh=$('shiftHint');if(touch&&(data?.set?.mso??true)&&sh&&sh.style.display==='block'&&now-shT>300){shT=now;window.dispatchEvent(new KeyboardEvent('keydown',{code:'ShiftLeft',key:'Shift',bubbles:true}))}};
+const _start=window.start;window.start=function(l,c){DRS.length=0;_start(l,c);joinSrv(l)};
+const _leave=window.leave;window.leave=async function(){leaveSrv();DRS.length=0;return _leave()};
+
+/* ---------- admin panel tab: kick, jumpscare, ground drops ---------- */
+function adminUI(){const P=$('sasAdminPanel'),tabs=P?.querySelector('.sasx-tabs');if(!tabs||$('sasModPage'))return;
+ const b=document.createElement('button');b.textContent='Kick · Scare · Drops';tabs.appendChild(b);
+ const pg=document.createElement('section');pg.id='sasModPage';pg.style.display='none';
+ pg.innerHTML='<h3>👢 Kick player</h3><input id="sasKName" placeholder="Username"><input id="sasKReason" maxlength="120" placeholder="Reason"><button id="sasKGo">Kick</button><h3>👻 Jumpscare</h3><input id="sasJName" placeholder="#Username"><div><button id="sasJGo">Scare player</button><button id="sasJAll">Scare ALL</button></div><h3>🎁 Ground drops (claim with E)</h3><input id="sasDAmt" type="number" placeholder="Cash amount"><button id="sasDCash">Drop cash pile</button><select id="sasDTier"><option value="gold">Gold gift box</option><option value="diamond">Diamond gift box</option><option value="platinum">Platinum gift box</option></select><button id="sasDBox">Drop gift box</button><select id="sasDSah"></select><button id="sasDSahBtn">Drop Sahur present</button>';
+ (P.querySelector('[data-page="3"]')||tabs).after(pg);$('sasDSah').innerHTML=SA.map((s,i)=>'<option value="'+i+'">'+esc(s[0])+'</option>').join('');
+ const others=[...tabs.querySelectorAll('button')].filter(x=>x!==b);
+ b.onclick=()=>{others.forEach(x=>x.classList.remove('active'));b.classList.add('active');P.querySelectorAll('[data-page]').forEach(p=>p.style.display='none');pg.style.display='block'};
+ others.forEach(x=>x.addEventListener('click',()=>{b.classList.remove('active');pg.style.display='none'}));
+ const ok=()=>{if(!isAdm()){toast('Admin only');return false}if(!ctl){toast('Not connected online yet');return false}return true};
+ const online=n=>{const l=window.sasOnlineUsers||[];return!l.length||l.some(u=>nm(u)===n)};
+ const send=(k,to,extra)=>sendCh(ctl,'cmd',{k,to,from:uid(),t:Date.now(),...extra});
+ $('sasKGo').onclick=()=>{if(!ok())return;const n=nm($('sasKName').value);if(!n||n==='all')return toast('Enter a username');if(n===base(acc.name))return toast("Can't kick yourself");if(!online(n))return toast(n+' is not online');send('kick',n,{reason:$('sasKReason').value.trim().slice(0,120)});toast('👢 Kick sent to '+n);$('sasKReason').value=''};
+ $('sasJGo').onclick=()=>{if(!ok())return;const n=nm($('sasJName').value);if(!n)return toast('Enter #username');if(!online(n))return toast(n+' is not online');send('scare',n);toast('👻 Jumpscare sent to '+n)};
+ $('sasJAll').onclick=()=>{if(!ok())return;if(confirm('Jumpscare EVERY online player?')){send('scare','all');toast('👻 Jumpscare sent to everyone')}};
+ const gd=f=>()=>{if(!isAdm())return toast('Admin only');if(!G)return toast('Join a server first');f()};
+ $('sasDCash').onclick=gd(()=>{const v=+$('sasDAmt').value;if(v>0)makeDrop({kind:'cash',v,exp:300},true);else toast('Enter an amount')});
+ $('sasDBox').onclick=gd(()=>makeDrop({kind:'box',v:$('sasDTier').value,exp:600},true));
+ $('sasDSahBtn').onclick=gd(()=>makeDrop({kind:'sahur',v:+$('sasDSah').value,exp:600},true))}
+adminUI();
+
+/* ---------- cloud save safety net (no import/export needed) ---------- */
+async function flush(){try{if(!sb||!uid()||!data)return;if(G&&ag[0])save();const p={...data};delete p.status;await sb.from('game_saves').upsert({user_id:uid(),game_data:p,updated_at:new Date().toISOString()},{onConflict:'user_id'})}catch(e){console.warn(e)}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});addEventListener('pagehide',flush);setInterval(()=>{if(G)flush()},20000);
+setInterval(()=>{const c=$('sasMso');if(c&&data&&document.activeElement!==c)c.checked=data.set.mso??touch},700);
+})();
+
 </script>
 </body></html>
