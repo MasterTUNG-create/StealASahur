@@ -40,12 +40,12 @@ button.g{background:#ffffff25;color:#fff}button:disabled{opacity:.4;pointer-even
 <button onclick="$('set').style.display='none'">Close</button></div></div>
 <div id="lb" class="pn" style="display:none;z-index:9"><div class="card" style="min-width:320px"><h1 style="font-size:34px">Leaderboards</h1>
 <select id="lc" onchange="lbShow()"><option value="s">Daily streak</option><option value="t">Most stolen</option><option value="i">Best $/s now</option><option value="b">Best Sahur</option><option value="r">Rank points</option><option value="l">Level</option></select>
-<div id="lt" style="text-align:left;min-height:120px"></div><small>Device-only until the server upgrade</small><button onclick="$('lb').style.display='none'">Close</button></div></div>
+<div id="lt" style="text-align:left;min-height:120px"></div><small>Leaderboard cloud sync is being added</small><button onclick="$('lb').style.display='none'">Close</button></div></div>
 <div id="shop" class="pn" style="display:none;z-index:9"><div class="card" id="si" style="width:min(540px,94vw);text-align:left"></div></div>
 <div id="soc" class="pn" style="display:none;z-index:9"><div class="card" style="width:min(460px,94vw)"><h1 style="font-size:32px">Friends &amp; Alliance</h1><input id="sn2" placeholder="Player name"><div><button onclick="soc('f')">Add friend</button><button class="g" onclick="soc('a')">Add ally</button></div><div id="sl" style="text-align:left"></div><button onclick="$('soc').style.display='none'">Close</button></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const ADMIN_NAME="Admin Tung";
+const ADMIN_NAME="";
 const RK=[['Bronze',0,'#cd7f32','⬟'],['Silver',100,'#cfd8dc','⬢'],['Gold',300,'#ffd54a','★'],['Diamond',700,'#5ce1ff','◆'],['Platinum',1300,'#7ef0d0','✪'],['Elite',2200,'#ff5c8a','⚜'],['Champion',3500,'#ff9a3c','♛'],['Unreal',5500,'#b266ff','✦']];
 const rank=rp=>{let r=0;RK.forEach((x,i)=>{if(rp>=x[1])r=i});return r};
 const badge=rp=>{const r=RK[rank(rp)];return '<b style="color:'+r[2]+';text-shadow:0 0 8px '+r[2]+'">'+r[3]+' '+r[0]+'</b>'};
@@ -72,7 +72,7 @@ async function auth(reg){const u=$('u').value.trim().replace(/\s+/g,' '),k=u.toL
  const h=await H(k+$('p').value);
  if(reg){if(users[k])return msg('That name is taken');users[k]={name:u,h,email:em,d:{coins:150,inv:[]}}}
  else if(!users[k]||users[k].h!==h)return msg('Wrong username or password');
- acc=users[k];data=acc.d;data.status=data.status||'player';if(acc.name.toLowerCase()==ADMIN_NAME.toLowerCase()||ADMIN_EMAILS.includes((acc.email||'').toLowerCase()))data.status='admin';acc.on=true;if(data.status=='admin')data.lv=4;data.own=data.own||{wood:1};data.eq=data.eq||'wood';data.fr=data.fr||[];data.allies=data.allies||[];const td=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
+ acc=users[k];data=acc.d;data.status='player';acc.on=true;if(data.status=='admin')data.lv=4;data.own=data.own||{wood:1};data.eq=data.eq||'wood';data.fr=data.fr||[];data.allies=data.allies||[];const td=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
  data.rp=data.rp||0;data.stolen=data.stolen||0;data.best=data.best||0;data.bestInc=data.bestInc||0;data.set=data.set||{};
  if(data.last!==td){data.streak=data.last===y?(data.streak||0)+1:1;data.last=td}
  persist();$('auth').style.display='none';$('menu').style.display='flex';menu()}
@@ -957,8 +957,7 @@ function maxAdmin(){
  const a=me();if(a){a.coins=Number.MAX_VALUE;a.lv=4;a.f2=1;a.inv=Array.from({length:24},(_,i)=>i===0?{i:HACK_ID,r:18}:null);a.sp=50;refresh(a)}
  saveSafe();
 }
-const oldAuth=auth;
-auth=async function(reg){const out=await oldAuth(reg);if(acc&&data){if(acc.name.toLowerCase()==='admin tung'){data.status='admin';maxAdmin();$('wl').textContent='Welcome, '+acc.name+' · ADMIN · ∞ STATS'} }return out};
+/* Admin authority is assigned only by the authenticated Supabase profiles.role field. */
 const oldStart=start;
 start=function(label,count){oldStart(label,count);if(isAdmin())maxAdmin();};
 const oldIncome=income;
@@ -1088,12 +1087,20 @@ const adminBody=`
  <h3>Player controls</h3><input id="sasTarget" placeholder="Player name or blank for me"><input id="sasAmount" type="number" placeholder="Amount"><button id="sasGiveCash">Give money</button><button id="sasGiveXP">Give XP</button><button id="sasGiveSahur">Give selected Sahur</button><select id="sasAdminSahur"></select>
 </section>
 <section data-page="2">
- <h3>Command console</h3><p><code>/help</code> lists commands. Use <code>/tp all</code>, <code>/coins all 1000000</code>, <code>/give all 3</code>, <code>/spawn 5</code>, <code>/announce message</code>, <code>/event on</code>, <code>/day</code>, <code>/night</code>, <code>/fly</code>, <code>/speed 30</code>, <code>/rebirth all</code>.</p>
- <label>Custom command alias<input id="sasAlias" placeholder="e.g. party"></label><label>Command to run<input id="sasAliasRun" placeholder="e.g. event on"></label><button id="sasAliasSave">Save alias</button><div id="sasAliasList" class="sasx-scroll"></div>
+ <h3>⚡ Command console</h3>
+ <div class="sasx-row"><label>Run an admin command<input id="sasCommandInput" placeholder="Example: /spawnrandom 5" maxlength="180"></label><button id="sasCommandRun">▶ Run command</button></div>
+ <div class="sasx-grid">
+  <div class="sasx-row"><h3>🌍 World commands</h3><p><code>/clearworld</code> · Clear conveyor Sahurs</p><p><code>/spawn ID</code> · Spawn a specific Sahur</p><p><code>/spawnrandom COUNT</code> · Spawn random Sahurs</p><p><code>/luck MULTIPLIER MINUTES</code> · Timed rare-spawn boost</p><p><code>/day</code> · <code>/night</code> · <code>/event on/off</code></p><button class="secondary" data-run-command="clearworld">Clear conveyor</button><button class="secondary" data-run-command="spawnrandom 5">Spawn 5 random</button></div>
+  <div class="sasx-row"><h3>🎁 Player rewards</h3><p><code>/give PLAYER ID</code> · Grant a Sahur</p><p><code>/coins PLAYER AMOUNT</code> · Grant coins</p><p><code>/xp AMOUNT</code> · Grant XP to yourself</p><p><code>/clear PLAYER</code> · Clear a player's inventory</p><button class="secondary" data-run-command="coins me 1000000">Give myself 1M</button></div>
+  <div class="sasx-row"><h3>🧭 Player controls</h3><p><code>/tp PLAYER</code> · Teleport yourself to a player</p><p><code>/tp all</code> · Bring everyone to you</p><p><code>/speed NUMBER</code> · Set movement speed</p><p><code>/fly</code> · Toggle hover</p></div>
+  <div class="sasx-row"><h3>📣 Server tools</h3><p><code>/announce MESSAGE</code> · Broadcast a message</p><p><code>/status</code> · Show local server status</p><p><code>/help</code> · Show command reference</p></div>
+ </div>
+ <h3>Custom command aliases</h3><label>Alias name<input id="sasAlias" placeholder="e.g. party"></label><label>Command to run<input id="sasAliasRun" placeholder="e.g. event on"></label><button id="sasAliasSave">Save alias</button><div id="sasAliasList" class="sasx-scroll"></div>
 </section>
 <section data-page="3">
- <h3>World override</h3><select id="sasDayMode"><option value="auto">Automatic day/night</option><option value="day">Permanent daytime</option><option value="night">Permanent nighttime</option></select>
+ <h3>🌤 World controls</h3><select id="sasDayMode"><option value="auto">Automatic day/night</option><option value="day">Permanent daytime</option><option value="night">Permanent nighttime</option></select>
  <button id="sasApplyDay">Apply lighting</button><button id="sasAdminEventUI">Toggle event HUD</button><button id="sasAdminRefresh">Refresh player lists</button>
+ <div class="sasx-row"><h3>🧹 World cleanup</h3><p>Remove every Sahur currently moving along the conveyor in this running game. Player-owned Sahurs and saved inventories are not deleted.</p><button id="sasClearAllSahurs" style="background:linear-gradient(#ff7777,#d92345);color:#fff">🧹 CLEAR ALL SAHURS</button><p id="sasClearStatus" aria-live="polite">Ready.</p></div>
 </section>`;
 panel('sasAdminPanel','👑 ADMIN ABUSE CONTROL CENTER',adminBody);
 const dock=document.createElement('div');dock.id='sasAdminDock';dock.innerHTML='<button>👑 Admin Abuse</button>';dock.firstChild.onclick=()=>{if(!isAdmin())return;refreshAdminLists();show('sasAdminPanel')};document.body.appendChild(dock);
@@ -1105,6 +1112,15 @@ function refreshAdminLists(){
  ['sasTPWho','sasTPDest'].forEach(id=>$(id).innerHTML=opts);
  $('sasTPDest').insertAdjacentHTML('afterbegin','<option value="self">My character</option>');
  $('sasAdminSahur').innerHTML=SA.map((s,i)=>`<option value="${i}">${esc(s[0])} · ${fmt2(s[3])}/s</option>`).join('');
+}
+function clearAllConveyorSahurs(){
+ if(!adminGuard())return false;
+ const removed=items.length;
+ for(const it of items){if(it?.m&&world)world.remove(it.m)}
+ items.splice(0,items.length);
+ if($('sasClearStatus'))$('sasClearStatus').textContent='Cleared '+removed+' conveyor Sahur'+(removed===1?'':'s')+'. Player inventories were preserved.';
+ toast('🧹 Cleared '+removed+' conveyor Sahurs');
+ return true;
 }
 function targetPlayer(v){if(!v||v.toLowerCase()==='me'||v.toLowerCase()==='self')return me();return allPlayers().find(a=>a.name.toLowerCase()===v.toLowerCase()||a.name.toLowerCase().replace(/ \[.*\]$/,'')===v.toLowerCase())}
 $('sasTP').onclick=()=>{if(!adminGuard())return;const a=allPlayers()[+$('sasTPWho').value],v=$('sasTPDest').value,b=v==='self'?me():allPlayers()[+v];if(!a||!b)return toast('Choose player and destination');a.m.position.copy(b.m.position);toast('Teleported '+a.name+' to '+b.name)};
@@ -1153,7 +1169,7 @@ let aliases={};
 function runCommand(raw){
  if(!adminGuard())return;const parts=raw.trim().replace(/^\//,'').split(/\s+/),cmd=(parts.shift()||'').toLowerCase(),args=parts;
  const arg0=args[0],num=finite(arg0);
- if(cmd==='help')return toast('/give [all|player] [id] · /coins [all|player] amount · /tp [all|player] · /spawn id · /announce text · /event on/off · /day · /night · /fly · /speed n · /rebirth all');
+ if(cmd==='help')return toast('/clearworld · /spawn ID · /spawnrandom COUNT · /luck MULTIPLIER MINUTES · /cashdrop AMOUNT · /give PLAYER ID · /coins PLAYER AMOUNT · /givecash PLAYER AMOUNT · /givesahur PLAYER ID · /tp PLAYER · /announce TEXT · /event on/off · /day · /night · /fly · /speed N · /status');
  if(aliases[cmd])return runCommand(aliases[cmd]);
  if(cmd==='announce')return announce(args.join(' '),false);
  if(cmd==='event'){if(arg0==='on')return startAbuse();abuseUntil=0;abuseMult=1;return toast('Event stopped')}
@@ -1173,8 +1189,19 @@ function runCommand(raw){
  if(cmd==='rebirth'){if(args[0]==='all'){allPlayers().forEach(a=>{if(a!==me())a.coins=0});return toast('All players reset their cash (local)')}}
  if(cmd==='clear'){const a=targetPlayer(args[0])||me();a.inv=a.inv.map(()=>null);refresh(a);return toast('Inventory cleared')}
  if(cmd==='xp'){data.xp=(data.xp||0)+Math.max(0,num);return renderProgress()}
+ if(cmd==='clearworld'||cmd==='clearall'||cmd==='clearallSahurs'.toLowerCase())return clearAllConveyorSahurs();
+ if(cmd==='spawnrandom'){const count=Math.max(1,Math.min(30,Math.floor(num||1)));for(let k=0;k<count;k++){const id=Math.floor(Math.random()*SA.length);spawnConveyor(id)}return toast('Spawned '+count+' random Sahurs')}
+ if(cmd==='luck'){const mult=Math.max(1,Math.min(10000,finite(args[0],10))),mins=Math.max(1,Math.min(60,finite(args[1],5)));abuseMult=mult;abuseUntil=Date.now()+mins*60000;$('sasAbuseStatus').textContent='ACTIVE · Luck ×'+fmt2(mult)+' · '+mins+' minutes';return toast('Rare spawn luck ×'+fmt2(mult)+' for '+mins+' minutes')}
+ if(cmd==='cashdrop'){const amount=Math.max(1,Math.min(1e12,finite(args[0],1000000)));spawnRewardDrop('cash',amount);return toast('Spawned a '+fmt2(amount)+' cash drop')}
+ if(cmd==='status')return toast('Local room · '+allPlayers().length+' player models · '+items.length+' conveyor Sahurs · '+(abuseUntil>Date.now()?'luck event active':'no luck event'));
+ if(cmd==='givecash'){const who=args[0]||'me',amount=Math.max(0,finite(args[1]));const a=targetPlayer(who);if(!a)return toast('Player not found');a.coins+=amount;if(a===me())hud();return toast('Granted '+fmt2(amount)+' coins to '+a.name)}
+ if(cmd==='givesahur'){const who=args[0]||'me',id=finite(args[1],-1),a=targetPlayer(who);if(!a||!SA[id])return toast('Usage: /givesahur PLAYER SAHUR_ID');const slot=a.inv.indexOf(null);if(slot<0)return toast('Target base is full');a.inv[slot]={i:id,r:SA[id][1]};refresh(a);if(a===me())hud();return toast('Granted '+SA[id][0]+' to '+a.name)}
  return toast('Unknown command · /help');
 }
+$('sasClearAllSahurs').onclick=()=>{if(!adminGuard())return;if(!confirm('Clear every Sahur currently on the conveyor? Player-owned Sahurs and saved inventories will stay untouched.'))return;clearAllConveyorSahurs()};
+$('sasCommandRun').onclick=()=>{const input=$('sasCommandInput'),raw=input.value.trim();if(!raw)return;input.value='';runCommand(raw.startsWith('/')?raw:'/'+raw)};
+$('sasCommandInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('sasCommandRun').click()});
+document.querySelectorAll('[data-run-command]').forEach(b=>b.addEventListener('click',()=>runCommand('/'+b.dataset.runCommand)));
 document.addEventListener('keydown',e=>{if(e.target?.id==='cmd'&&e.key==='Enter'){e.preventDefault();e.stopImmediatePropagation();const raw=e.target.value;e.target.value='';e.target.style.display='none';runCommand(raw)}},true);
 $('sasAliasSave').onclick=()=>{if(!adminGuard())return;const k=$('sasAlias').value.trim().toLowerCase(),v=$('sasAliasRun').value.trim();if(!/^[a-z][a-z0-9_-]{1,15}$/.test(k)||!v)return toast('Enter a valid alias and command');aliases[k]=v;localStorage.sas_admin_aliases=JSON.stringify(aliases);renderAliases()};
 function renderAliases(){try{aliases=JSON.parse(localStorage.sas_admin_aliases||'{}')}catch{aliases={}}$('sasAliasList').innerHTML=Object.entries(aliases).map(([k,v])=>`<div class="sasx-row">/${esc(k)} → ${esc(v)}</div>`).join('')||'<small>No custom aliases saved.</small>'}
@@ -1296,158 +1323,7 @@ const help=document.createElement('small');help.style.cssText='opacity:.8;max-wi
 
 
 <!-- SAS REALTIME MULTIPLAYER V2: fixes global lexical-scope access and synchronizes connected players. -->
-<script id="SAS_REALTIME_MULTIPLAYER_V2">
-(()=>{
-'use strict';
-const sb=window.sasSupabase;
-if(!sb){console.error('SAS multiplayer: Supabase client unavailable');return;}
-let room=null, roomNo=null, peers=new Map(), sendClock=0, originalStart=window.start, originalLeave=window.leave;
-const uid=()=>window.sasCurrentUserId||null;
-const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
-const baseFor=id=>hash(id)%10;
-const ownAgent=()=>Array.isArray(ag)?ag[0]:null;
-const send=(event,payload)=>{if(room&&payload)room.send({type:'broadcast',event,payload}).catch(e=>console.warn('Realtime send failed:',e))};
-function publicState(){
- const a=ownAgent(),id=uid();
- if(!a||!data||!id||!a.m)return null;
- return {id,name:acc?.name||'Player',base:a.base,x:a.m.position.x,y:a.m.position.y,z:a.m.position.z,rot:a.m.rotation.y,coins:Number(a.coins)||0,lv:a.lv||0,inv:a.inv.map(v=>v&&({i:v.i,r:v.r})),lock:a.lock||0,at:Date.now()};
-}
-function inventoryKey(inv){return JSON.stringify(inv||[])}
-function makePeer(st){
- if(!st||!st.id||st.id===uid()||!G||!world)return null;
- let a=peers.get(st.id);
- if(a)return a;
- a={id:st.id,remote:true,bot:false,name:st.name||'Player',base:Number.isInteger(st.base)?st.base:baseFor(st.id),coins:0,lv:0,inv:Array(24).fill(null),lock:0,carry:null,vy:0,netTarget:null,netInvKey:''};
- try{
-  a.m=person(0x54c8ff,a.name);
-  a.m.position.set(Number(st.x)||0,Number(st.y)||0,Number(st.z)||0);
-  a.m.rotation.y=Number(st.rot)||0;
-  a.netTarget={x:a.m.position.x,y:a.m.position.y,z:a.m.position.z,rot:a.m.rotation.y};
-  world.add(a.m);refresh(a);peers.set(st.id,a);ag.push(a);signs();
-  return a;
- }catch(e){console.warn('Could not create remote player:',e);return null}
-}
-function applyState(st){
- if(!st||!st.id||st.id===uid())return;
- const a=makePeer(st);if(!a)return;
- a.name=String(st.name||a.name).slice(0,24);
- a.base=Number.isInteger(st.base)?st.base:a.base;
- if(Number.isFinite(st.x)&&Number.isFinite(st.z)){
-  a.netTarget={x:st.x,y:Number(st.y)||0,z:st.z,rot:Number(st.rot)||0};
- }
- if(Array.isArray(st.inv)){
-  const next=Array.from({length:24},(_,i)=>st.inv[i]?{i:+st.inv[i].i,r:+st.inv[i].r}:null);
-  const key=inventoryKey(next);
-  a.coins=Number(st.coins)||0;a.lv=Number(st.lv)||0;a.lock=Number(st.lock)||0;
-  if(key!==a.netInvKey){a.inv=next;a.netInvKey=key;refresh(a);signs()}
- }
-}
-function removePeer(id){
- const a=peers.get(id);if(!a)return;
- try{world.remove(a.m);if(a.sg)world.remove(a.sg)}catch{}
- ag=ag.filter(x=>x!==a);peers.delete(id);signs();
-}
-async function disconnectRoom(){
- if(room){const old=room;room=null;try{await sb.removeChannel(old)}catch(e){console.warn('Room close:',e)}}
- [...peers.keys()].forEach(removePeer);roomNo=null;
-}
-async function connectRoom(n){
- if(!uid())throw new Error('You must be logged in to join an online server');
- await disconnectRoom();
- roomNo=n;
- const channel=sb.channel('sas-live-server-'+n,{config:{broadcast:{self:false},presence:{key:uid()}}});
- room=channel;
- channel.on('broadcast',{event:'player'},({payload})=>applyState(payload));
- channel.on('broadcast',{event:'player_patch'},({payload})=>{
-  if(!payload||!payload.player_id||!Array.isArray(payload.inv))return;
-  if(payload.player_id===uid()){
-   const a=ownAgent();if(!a)return;
-   a.inv=Array.from({length:24},(_,i)=>payload.inv[i]?{i:+payload.inv[i].i,r:+payload.inv[i].r}:null);
-   a.coins=Number(payload.coins)||0;data.coins=a.coins;data.inv=a.inv.map(v=>v&&[v.i,v.r]);refresh(a);hud();persist();
-  }else{
-   const a=peers.get(payload.player_id);if(a){
-    const next=Array.from({length:24},(_,i)=>payload.inv[i]?{i:+payload.inv[i].i,r:+payload.inv[i].r}:null);
-    a.coins=Number(payload.coins)||0;a.inv=next;a.netInvKey=inventoryKey(next);refresh(a);
-   }
-  }
- });
- channel.on('presence',{event:'sync'},()=>{
-  const state=channel.presenceState(),seen=new Set();
-  Object.values(state).flat().forEach(v=>{if(v?.id&&v.id!==uid()){seen.add(v.id);applyState(v)}});
-  [...peers.keys()].forEach(id=>{if(!seen.has(id))removePeer(id)});
-  const el=document.getElementById('sn');if(el)el.textContent='Server '+n+' · '+(seen.size+1)+'/10';
- });
- const status=await new Promise(resolve=>{
-  let settled=false;
-  const done=v=>{if(!settled){settled=true;resolve(v)}};
-  channel.subscribe(async state=>{
-   if(state==='SUBSCRIBED'){
-    const a=ownAgent();if(a){a.id=uid();const st=publicState();if(st)try{await channel.track(st)}catch(e){console.warn('Presence track failed:',e)}}
-    done(state);
-   }else if(state==='CHANNEL_ERROR'||state==='TIMED_OUT'||state==='CLOSED')done(state);
-  });
-  setTimeout(()=>done('TIMED_OUT'),12000);
- });
- if(status!=='SUBSCRIBED'){if(room===channel)room=null;throw new Error('Supabase Realtime did not connect: '+status)}
-}
-window.start=function(label,count){
- const match=String(label).match(/Server\s+(\d+)/i);
- if(!match){disconnectRoom();return originalStart(label,count)}
- const n=+match[1];
- originalStart(label,1);
- const a=ownAgent();
- if(a&&uid()){
-  a.id=uid();a.base=baseFor(uid());
-  const b=BP(a.base);a.m.position.set(b.x,0,b.z+DIR(a.base)*6);
-  refresh(a);signs();
- }
- connectRoom(n).then(()=>{const st=publicState();if(st)send('player',st)})
-  .catch(e=>{console.error('Room connect failed:',e);toast('⚠ Multiplayer connection failed: '+e.message)});
-};
-window.leave=async function(){
- await disconnectRoom();
- return originalLeave();
-};
-const priorTick=window.tick;
-if(typeof priorTick==='function')window.tick=function(dt){
- priorTick(dt);
- if(!room||!G)return;
- for(const a of peers.values()){
-  const t=a.netTarget;if(!t||!a.m)continue;
-  const k=Math.min(1,dt*14);
-  a.m.position.x+=(t.x-a.m.position.x)*k;
-  a.m.position.y+=(t.y-a.m.position.y)*k;
-  a.m.position.z+=(t.z-a.m.position.z)*k;
-  let d=Math.atan2(Math.sin(t.rot-a.m.rotation.y),Math.cos(t.rot-a.m.rotation.y));
-  a.m.rotation.y+=d*k;
- }
- sendClock+=dt;
- if(sendClock>=.1){sendClock=0;const st=publicState();if(st)send('player',st)}
-};
-const priorSteal=window.steal;
-if(typeof priorSteal==='function')window.steal=function(thief,v,j){
- const targetId=v?.id,r=priorSteal(thief,v,j);
- if(room){
-  if(targetId)send('player_patch',{player_id:targetId,coins:v.coins,inv:v.inv.map(x=>x&&({i:x.i,r:x.r}))});
-  const st=publicState();if(st)send('player',st);
- }
- return r;
-};
-const priorDeposit=window.deposit;
-if(typeof priorDeposit==='function')window.deposit=function(a){
- const r=priorDeposit(a);if(room){const st=publicState();if(st)send('player',st)}return r;
-};
-const priorBuy=window.buy;
-if(typeof priorBuy==='function')window.buy=function(a,it){
- const r=priorBuy(a,it);if(room&&a===ownAgent()){const st=publicState();if(st)send('player',st)}return r;
-};
-const priorSave=window.save;
-if(typeof priorSave==='function')window.save=function(){
- const r=priorSave();if(room){const st=publicState();if(st)send('player',st)}return r;
-};
-window.addEventListener('beforeunload',()=>{if(room){try{room.untrack()}catch{}}});
-})();
-</script>
+<!-- Legacy partial Realtime V2 removed: use the room-server addon instead. -->
 
 <!-- ADMIN PANEL ACCESS REPAIR: Supabase profiles.role remains the authority. -->
 <script id="SAS_ADMIN_PANEL_ACCESS_REPAIR">
