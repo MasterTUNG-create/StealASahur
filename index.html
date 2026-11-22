@@ -1978,7 +1978,7 @@ addEventListener('click',e=>{
 <script id="SAS_V30_ADMIN_ARRIVAL_AND_COMMAND_DIRECTORY">
 (()=>{'use strict';
 const $=id=>document.getElementById(id),N=window.SASNET,sb=window.sasSupabase;
-const isAdmin=()=>typeof window.isAdm==='function'&&window.isAdm();
+const isAdmin=()=>typeof isAdm==='function'&&isAdm();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* Cleaner HUD: compact top status, no admin controls stacked over the top HUD. */
@@ -2117,7 +2117,7 @@ setInterval(()=>{
 (()=>{'use strict';
 const N=window.SASNET,sb=window.sasSupabase,$=id=>document.getElementById(id);
 if(!N||!N.H||!sb){console.error('SAS v3.1 chat: online network or Supabase unavailable');return}
-const admin=()=>typeof window.isAdm==='function'&&window.isAdm();
+const admin=()=>typeof isAdm==='function'&&isAdm();
 const clean=s=>String(s??'').replace(/[\r\n\t]+/g,' ').trim().slice(0,180);
 const safeName=s=>String(s||'Player').replace(/\s+\[.*\]$/,'').slice(0,24);
 let lastSent=0,chatOpen=false;
@@ -2305,6 +2305,218 @@ if(adminPanel){const title=adminPanel.querySelector('.sasx-card h2');if(title)ti
  const oldMini=$('adm');if(oldMini)oldMini.style.display='none';
  // Remove stale shortcut references in any remaining controls/help text.
  document.querySelectorAll('#ctl td').forEach(td=>{if(/admin command bar/i.test(td.textContent))td.textContent='Open the admin control panel'});
+})();
+</script>
+
+
+
+<!-- SAS v3.3: unified admin control center + safe viewport layout repair -->
+<style id="SAS_V33_ADMIN_REBUILD_CSS">
+/* One full-screen modal: never clipped by the HUD, viewport edges, or mobile safe areas. */
+#sasAdminPanel{
+ position:fixed!important;inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;
+ width:100vw!important;height:100dvh!important;max-height:100dvh!important;transform:none!important;
+ margin:0!important;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;
+ display:none!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;
+ background:rgba(2,6,18,.78)!important;backdrop-filter:blur(8px)!important;pointer-events:none!important;z-index:200000!important;
+}
+#sasAdminPanel.show{display:flex!important;pointer-events:auto!important}
+#sasAdminPanel .sasx-card{
+ width:min(1040px,100%)!important;max-width:1040px!important;max-height:min(900px,calc(100dvh - 24px))!important;
+ height:auto!important;min-height:0!important;overflow:auto!important;overscroll-behavior:contain!important;
+ padding:0!important;margin:0!important;border-radius:18px!important;background:#0b1428!important;
+ border:1px solid #ffffff35!important;box-shadow:0 24px 90px #000e!important;text-align:left!important;
+}
+#sasAdminPanel .sasx-card>:not(#sasV33Root){display:none!important}
+#sasV33Root{display:flex!important;flex-direction:column!important;gap:12px!important;padding:clamp(12px,2vw,22px)!important;min-width:0!important;color:#eef4ff!important}
+#sasV33Root *{box-sizing:border-box}
+#sasV33Root .v33-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid #ffffff20;padding-bottom:12px}
+#sasV33Root .v33-title{font-size:clamp(19px,2.5vw,27px);font-weight:850;color:#ffda68;letter-spacing:.02em}
+#sasV33Root .v33-sub{font-size:12px;color:#aebbd4;margin-top:3px}
+#sasV33Root .v33-close{background:#ffffff18!important;color:#fff!important;border:1px solid #ffffff30!important}
+#sasV33Root .v33-nav{display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:4;padding:7px;background:#101d36;border:1px solid #ffffff1a;border-radius:12px}
+#sasV33Root button,#sasV33Root input,#sasV33Root select{font:inherit;max-width:100%;min-width:0;border-radius:9px}
+#sasV33Root button{padding:9px 12px;border:0;background:linear-gradient(180deg,#ffdf70,#f5a623);color:#251700;font-weight:750;cursor:pointer;white-space:normal}
+#sasV33Root button.secondary{background:#ffffff16;color:#f3f6ff;border:1px solid #ffffff28}
+#sasV33Root button.danger{background:linear-gradient(180deg,#ff8585,#d73548);color:#fff}
+#sasV33Root button:disabled{opacity:.5;cursor:not-allowed}
+#sasV33Root input,#sasV33Root select{width:100%;padding:10px 11px;background:#071126;color:#f5f7ff;border:1px solid #ffffff30;outline:none}
+#sasV33Root label{display:flex;flex-direction:column;gap:5px;color:#dce6fb;font-size:13px;min-width:0}
+#sasV33Root .v33-page{display:none;min-width:0}
+#sasV33Root .v33-page.active{display:block}
+#sasV33Root .v33-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#sasV33Root .v33-card{min-width:0;padding:12px;border:1px solid #ffffff20;border-radius:13px;background:linear-gradient(145deg,#152441,#0d1830)}
+#sasV33Root .v33-card h3{margin:0 0 8px;color:#9fe8ff;font-size:15px}
+#sasV33Root .v33-card p{margin:5px 0 9px;color:#b9c7df;font-size:12px;line-height:1.45}
+#sasV33Root .v33-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
+#sasV33Root .v33-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+#sasV33Root .v33-actions>*{flex:0 1 auto}
+#sasV33Root .v33-status{min-height:18px;color:#b7e9c8;font-size:12px;overflow-wrap:anywhere}
+#sasV33Root .v33-cmdlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:34vh;overflow:auto;padding-right:3px}
+#sasV33Root .v33-cmd{display:flex;flex-direction:column;gap:5px;min-width:0;padding:9px;border:1px solid #ffffff20;border-radius:10px;background:#ffffff09}
+#sasV33Root .v33-cmd code{color:#ffe08a;overflow-wrap:anywhere;white-space:normal}
+#sasV33Root .v33-cmd small{color:#b9c7df;line-height:1.35}
+#sasV33Root .v33-cmd button{align-self:flex-start;padding:6px 9px;font-size:12px}
+#sasAdminDock{position:fixed!important;top:auto!important;right:max(14px,env(safe-area-inset-right))!important;bottom:max(14px,env(safe-area-inset-bottom))!important;left:auto!important;z-index:199999!important;display:none;pointer-events:auto!important}
+#sasAdminDock button{max-width:190px!important;padding:9px 13px!important;border-radius:12px!important;box-shadow:0 5px 20px #0009!important}
+/* Keep chat, announcements, help text and event pill in distinct screen zones. */
+#sasChatToggle{left:max(14px,env(safe-area-inset-left))!important;bottom:max(14px,env(safe-area-inset-bottom))!important;z-index:10043!important}
+#sasChatPanel{left:max(14px,env(safe-area-inset-left))!important;bottom:62px!important;z-index:10044!important;max-height:min(44vh,380px)!important;overflow:hidden!important}
+#sasEventBanner.on{top:max(10px,env(safe-area-inset-top))!important;z-index:10050!important;max-width:min(560px,92vw)!important;white-space:normal!important}
+#sasAnn2.on{top:58px!important;z-index:10049!important;max-width:min(560px,92vw)!important;white-space:normal!important}
+#sasEvPill{left:50%!important;right:auto!important;top:auto!important;bottom:64px!important;transform:translateX(-50%)!important;max-width:min(90vw,520px)!important;white-space:normal!important;text-align:center!important;z-index:10020!important}
+#hud>.hb[style*="bottom:14px"]{display:none!important}
+@media(max-width:700px){
+ #sasAdminPanel{padding:6px!important}
+ #sasAdminPanel .sasx-card{max-height:calc(100dvh - 12px)!important;border-radius:13px!important}
+ #sasV33Root{gap:9px!important;padding:10px!important}
+ #sasV33Root .v33-grid,#sasV33Root .v33-fields,#sasV33Root .v33-cmdlist{grid-template-columns:minmax(0,1fr)!important}
+ #sasV33Root .v33-cmdlist{max-height:31vh!important}
+ #sasAdminDock{right:8px!important;bottom:8px!important}
+ #sasChatToggle{left:8px!important;bottom:8px!important}
+ #sasChatPanel{left:8px!important;bottom:54px!important;width:min(340px,calc(100vw - 16px))!important;max-height:38vh!important}
+ #sasEvPill{bottom:56px!important}
+ #sasAnn2.on{top:52px!important}
+}
+</style>
+<script id="SAS_V33_ADMIN_REBUILD">
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const panel=$('sasAdminPanel'),dock=$('sasAdminDock');
+ const isAdmin=()=>{try{return typeof isAdm==='function'&&!!isAdm()}catch{return false}};
+ const notify=m=>{if(typeof window.toast==='function')window.toast(m);else console.info(m)};
+ if(!panel||!dock){console.error('SAS v3.3: admin panel shell missing');return}
+ const card=panel.querySelector('.sasx-card');if(!card){console.error('SAS v3.3: admin panel card missing');return}
+ const root=document.createElement('div');root.id='sasV33Root';
+ root.innerHTML=`
+ <div class="v33-head"><div><div class="v33-title">👑 ADMIN CONTROL CENTER</div><div class="v33-sub">One panel · P to open/close · Commands run through the existing game handlers</div></div><div class="v33-actions"><span id="v33Online" class="v33-sub">Checking server…</span><button id="v33Close" class="v33-close" type="button">✕ Close</button></div></div>
+ <nav class="v33-nav" aria-label="Admin sections"><button type="button" data-v33tab="home">Overview</button><button type="button" data-v33tab="players">Players & economy</button><button type="button" data-v33tab="events">Events & world</button><button type="button" data-v33tab="commands">All commands</button></nav>
+ <section class="v33-page active" data-v33page="home"><div class="v33-grid">
+  <div class="v33-card"><h3>📣 Server announcement</h3><p>Send a message to everyone in your current online server.</p><label>Message<input id="v33AnnText" maxlength="140" placeholder="Message to this server"></label><div class="v33-actions"><button id="v33AnnBtn">Announce to server</button><button id="v33GlobalBtn" class="secondary">Global announcement</button></div></div>
+  <div class="v33-card"><h3>🍀 Luck boost</h3><p>Set the server spawn-luck multiplier for a timed period.</p><div class="v33-fields"><label>Multiplier<input id="v33Luck" type="number" min="1" max="1000000" value="10"></label><label>Minutes<input id="v33LuckMin" type="number" min="1" max="600" value="10"></label></div><button id="v33LuckBtn">Activate luck</button></div>
+  <div class="v33-card"><h3>🌐 Server status</h3><p id="v33ServerStatus">Join an online server to see live player information.</p><div class="v33-actions"><button class="secondary" data-cmd="players">List players</button><button class="secondary" data-cmd="serverinfo">Server info</button></div></div>
+  <div class="v33-card"><h3>⚡ Quick events</h3><p>Each event includes its themed Sahurs and 2× cash event behavior.</p><div class="v33-actions"><button data-cmd="event bloodmoon 5">🩸 Blood Moon</button><button data-cmd="event fire 5">🔥 Fire</button><button data-cmd="event ice 5">❄ Ice</button><button data-cmd="event abuse 5">🚨 Admin Abuse</button><button class="danger" data-cmd="event stop">Stop event</button></div></div>
+ </div></section>
+ <section class="v33-page" data-v33page="players"><div class="v33-grid">
+  <div class="v33-card"><h3>🎁 Give rewards</h3><p>Grants are sent through the authenticated Supabase admin function and can reach offline players.</p><div class="v33-fields"><label>Username<input id="v33User" maxlength="17" placeholder="#username"></label><label>Cash amount<input id="v33Cash" type="number" min="0" step="1" placeholder="1000000"></label></div><button id="v33GiveCash">Give cash</button><label style="margin-top:9px">Sahur<select id="v33Sahur"></select></label><button id="v33GiveSahur">Give Sahur</button><div id="v33RewardStatus" class="v33-status"></div></div>
+  <div class="v33-card"><h3>🛡 Moderation</h3><div class="v33-fields"><label>Username<input id="v33ModUser" maxlength="17" placeholder="#username"></label><label>Ban minutes (0 = permanent)<input id="v33BanMin" type="number" min="0" value="60"></label></div><label>Reason<input id="v33Reason" maxlength="160" placeholder="Reason"></label><div class="v33-actions"><button id="v33Ban">Ban</button><button id="v33Unban" class="secondary">Unban</button><button id="v33Kick" class="secondary">Kick from this server</button><button id="v33Terminate" class="danger">Terminate account</button></div><div id="v33ModStatus" class="v33-status"></div></div>
+  <div class="v33-card"><h3>🧹 Inventory cleanup</h3><p>Leave username blank to clear your own base. Enter a username to clear that player's saved Sahurs, online or offline.</p><label>Username (blank = your base)<input id="v33ClearUser" maxlength="17" placeholder="Blank = me · or #username"></label><button id="v33Clear">Clear all Sahurs</button><div id="v33ClearStatus" class="v33-status"></div></div>
+  <div class="v33-card"><h3>🧭 Player controls</h3><label>Target username<input id="v33Target" maxlength="17" placeholder="#username"></label><div class="v33-fields"><label>Freeze seconds<input id="v33FreezeSec" type="number" min="1" max="60" value="5"></label><label>Knockback radius<input id="v33BoomRadius" type="number" min="1" max="100" value="25"></label></div><div class="v33-actions"><button data-v33targetcmd="info">Player info</button><button data-v33targetcmd="freeze">Freeze</button><button data-v33targetcmd="smite">Smite</button><button data-v33targetcmd="bring">Bring here</button><button data-v33targetcmd="goto">Go to player</button><button data-v33targetcmd="trade" class="secondary">Trade</button></div><div class="v33-actions"><button data-cmd="kickall Removed by admin">Kick all non-admins</button><button data-cmd="boom 25" class="secondary">Area knockback</button></div></div>
+ </div></section>
+ <section class="v33-page" data-v33page="events"><div class="v33-grid">
+  <div class="v33-card"><h3>🌋 Timed events</h3><p>Choose an event and duration. Event requests are verified by the online room handler.</p><label>Duration (minutes)<input id="v33EventMin" type="number" min="1" max="120" value="5"></label><div class="v33-actions"><button data-v33event="bloodmoon">🩸 Blood Moon</button><button data-v33event="fire">🔥 Fire</button><button data-v33event="ice">❄ Ice</button><button data-v33event="abuse">🚨 Admin Abuse</button><button data-cmd="event stop" class="danger">Stop active event</button></div><div id="v33EventStatus" class="v33-status"></div></div>
+  <div class="v33-card"><h3>🎲 Conveyor controls</h3><label>Sahur ID<input id="v33SpawnId" type="number" min="0" placeholder="0"></label><label>Random spawn count<input id="v33SpawnCount" type="number" min="1" max="30" value="5"></label><div class="v33-actions"><button id="v33Spawn">Spawn Sahur ID</button><button id="v33SpawnRandom">Spawn random</button><button data-cmd="clearworld" class="danger">Clear conveyor</button></div></div>
+  <div class="v33-card"><h3>💵 World drops</h3><label>Cash rain total<input id="v33Rain" type="number" min="1" value="1000000"></label><div class="v33-actions"><button id="v33RainBtn">Drop cash around me</button><button id="v33BoomBtn" class="secondary">Knockback pulse</button></div></div>
+  <div class="v33-card"><h3>🔊 Admin presence luck</h3><p>When a verified admin is present, the multiplayer spawn-weight system already applies its built-in 10× multiplier. This control adds a separate timed server luck boost.</p><div class="v33-actions"><button data-cmd="luck 10 10">Apply 10× for 10 minutes</button><button data-cmd="announce 👑 Admin is in this server — 10× boosted luck is active!">Announce admin presence</button></div></div>
+ </div></section>
+ <section class="v33-page" data-v33page="commands"><div class="v33-card"><h3>⌨ Run a command</h3><p>Only commands connected to existing game handlers are listed. Use the examples as written; replace #username and values.</p><div class="v33-fields"><label style="grid-column:1/-1">Command<input id="v33Command" maxlength="220" placeholder="/cash #username 1000000"></label></div><div class="v33-actions"><button id="v33RunCommand">Run command</button><button id="v33ClearCommand" class="secondary">Clear</button></div><div id="v33CommandStatus" class="v33-status" aria-live="polite"></div></div><div class="v33-fields" style="margin-top:10px"><label style="grid-column:1/-1">Search commands<input id="v33Search" placeholder="Search by command, category, or description"></label></div><div id="v33CommandList" class="v33-cmdlist"></div></section>
+ `;
+ card.appendChild(root);
+ const commandRows=[
+  ['cash #username 1000000','Economy','Give cash to an online or offline player.'],
+  ['give #username "Sahur Name"','Economy','Give a selected Sahur to an online or offline player.'],
+  ['giveall cash 1000000','Economy','Give cash to everyone currently in this server.'],
+  ['giveall sahur "Sahur Name"','Economy','Give the selected Sahur to everyone in this server.'],
+  ['ban #username 60 reason','Moderation','Ban for minutes; use 0 for a permanent ban.'],
+  ['unban #username','Moderation','Remove a ban.'],
+  ['terminate #username','Moderation','Permanently delete the account after confirmation.'],
+  ['kick #username reason','Moderation','Kick one player from this server.'],
+  ['kickall reason','Moderation','Kick non-admin players from this server.'],
+  ['clearbrainrots','Inventory','Clear your own base.'],
+  ['clearbrainrots #username','Inventory','Clear another player’s saved Sahurs.'],
+  ['clearworld','World','Clear Sahurs from the conveyor in this server.'],
+  ['event bloodmoon 5','Events','Start Blood Moon for five minutes.'],
+  ['event fire 5','Events','Start Fire event for five minutes.'],
+  ['event ice 5','Events','Start Ice event for five minutes.'],
+  ['event abuse 5','Events','Start Admin Abuse for five minutes.'],
+  ['event stop','Events','Stop the active event.'],
+  ['luck 10 10','Events','Set 10× server spawn luck for ten minutes.'],
+  ['spawn 12','World','Request Sahur ID 12 on the conveyor.'],
+  ['spawnrandom 5','World','Request five random conveyor Sahurs.'],
+  ['rain 1000000','World','Drop claimable cash around your character.'],
+  ['boom 25','World','Create a knockback pulse around your character.'],
+  ['announce Message here','Server','Announce to everyone in this server.'],
+  ['gannounce Message here','Server','Send a global announcement.'],
+  ['players','Server','List players in the current server.'],
+  ['serverinfo','Server','Show current server information.'],
+  ['info #username','Players','Show player level and base information.'],
+  ['smite #username','Players','Apply the short stun effect to a player.'],
+  ['freeze #username 5','Players','Freeze a player for five seconds.'],
+  ['bring #username','Players','Bring a player to your position.'],
+  ['goto #username','Players','Move your character to a player.'],
+  ['trade #username','Players','Open the existing player-to-player trade flow.']
+ ];
+ const input=$('v33Command'),status=$('v33CommandStatus');
+ function showStatus(id,msg){const e=$(id);if(e)e.textContent=msg}
+ function dispatch(raw,where='v33CommandStatus'){
+  const command=String(raw||'').trim().replace(/^\/+/, '');if(!command){showStatus(where,'Enter a command first.');return}
+  if(!isAdmin()){showStatus(where,'Admin role is required.');notify('Admin only');return}
+  if(/^clearbrainrots(?:\s|$)/i.test(command)){
+   const target=command.replace(/^clearbrainrots\s*/i,'');
+   if(typeof window.sasClearPlayerBrainrots!=='function'){showStatus(where,'Clear command handler is unavailable.');return}
+   showStatus(where,'Working…');Promise.resolve(window.sasClearPlayerBrainrots(target)).then(m=>showStatus(where,m)).catch(e=>showStatus(where,'Failed: '+(e?.message||e)));return
+  }
+  let handled=0;
+  try{if(typeof window.sasRunAdminCommand==='function')handled=window.sasRunAdminCommand('/'+command)||0;
+   if(!handled&&typeof window.sasRunExtraCommand==='function')handled=window.sasRunExtraCommand('/'+command)||0;
+  }catch(e){console.error('Admin command failed:',e);showStatus(where,'Error: '+(e?.message||e));return}
+  if(!handled){showStatus(where,'This command is not available in the current game build, or a required server connection is missing.');return}
+  showStatus(where,'Command dispatched. Check the in-game notification for its result.');
+ }
+ function cmdValue(v){input.value='/'+v;input.focus();}
+ function goTab(name){root.querySelectorAll('[data-v33tab]').forEach(b=>b.classList.toggle('active',b.dataset.v33tab===name));root.querySelectorAll('[data-v33page]').forEach(p=>p.classList.toggle('active',p.dataset.v33page===name));}
+ root.querySelectorAll('[data-v33tab]').forEach(b=>b.addEventListener('click',()=>goTab(b.dataset.v33tab)));
+ $('v33Close').addEventListener('click',closePanel);
+ $('v33RunCommand').addEventListener('click',()=>dispatch(input.value));
+ $('v33ClearCommand').addEventListener('click',()=>{input.value='';status.textContent=''});
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();dispatch(input.value)}});
+ $('v33CommandList').innerHTML='';
+ function renderCommands(){const q=String($('v33Search').value||'').toLowerCase();const list=$('v33CommandList');list.textContent='';commandRows.filter(r=>r.join(' ').toLowerCase().includes(q)).forEach(r=>{const d=document.createElement('div');d.className='v33-cmd';const c=document.createElement('code');c.textContent='/'+r[0];const sm=document.createElement('small');sm.textContent=r[1]+' · '+r[2];const b=document.createElement('button');b.type='button';b.textContent='Use';b.addEventListener('click',()=>cmdValue(r[0]));d.append(c,sm,b);list.appendChild(d)})}
+ $('v33Search').addEventListener('input',renderCommands);renderCommands();
+ // Populate the Sahur selector from the actual game catalog, including event Sahurs.
+ const sahur=$('v33Sahur');if(typeof SA!=='undefined'&&Array.isArray(SA)){SA.forEach((s,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=String(s?.[0]||('Sahur '+i));sahur.appendChild(o)})}
+ const user=()=>String($('v33User').value||'').trim(),modUser=()=>String($('v33ModUser').value||'').trim();
+ const qn=n=>{n=String(n||'').trim().replace(/^#/,'');return /\s/.test(n)?'#"'+n.replace(/"/g,'')+'"':'#'+n};
+ $('v33GiveCash').onclick=()=>{if(!user())return showStatus('v33RewardStatus','Enter a username.');const amount=Math.max(0,Number($('v33Cash').value)||0);dispatch('cash '+qn(user())+' '+amount,'v33RewardStatus')};
+ $('v33GiveSahur').onclick=()=>{if(!user())return showStatus('v33RewardStatus','Enter a username.');const s=typeof SA!=='undefined'?SA[+$('v33Sahur').value]:null;if(!s)return showStatus('v33RewardStatus','Choose a valid Sahur.');dispatch('give '+qn(user())+' "'+String(s[0]).replace(/"/g,'')+'"','v33RewardStatus')};
+ $('v33Ban').onclick=()=>{if(!modUser())return showStatus('v33ModStatus','Enter a username.');dispatch('ban '+qn(modUser())+' '+Math.max(0,+$('v33BanMin').value||0)+' '+String($('v33Reason').value||'Admin action').replace(/[\r\n]/g,' '),'v33ModStatus')};
+ $('v33Unban').onclick=()=>{if(!modUser())return showStatus('v33ModStatus','Enter a username.');dispatch('unban '+qn(modUser()),'v33ModStatus')};
+ $('v33Kick').onclick=()=>{if(!modUser())return showStatus('v33ModStatus','Enter a username.');dispatch('kick '+qn(modUser())+' '+String($('v33Reason').value||'Removed by admin').replace(/[\r\n]/g,' '),'v33ModStatus')};
+ $('v33Terminate').onclick=()=>{if(!modUser())return showStatus('v33ModStatus','Enter a username.');if(!confirm('Permanently terminate #'+modUser().replace(/^#/,'')+' and delete their account and progress?'))return;dispatch('terminate '+qn(modUser()),'v33ModStatus')};
+ $('v33Clear').onclick=()=>dispatch('clearbrainrots '+String($('v33ClearUser').value||'').trim(),'v33ClearStatus');
+ root.querySelectorAll('[data-v33targetcmd]').forEach(b=>b.addEventListener('click',()=>{const n=String($('v33Target').value||'').trim();if(!n)return showStatus('v33ModStatus','Enter a target username in Player controls.');const k=b.dataset.v33targetcmd;let c=k+' '+qn(n);if(k==='freeze')c+=' '+Math.max(1,Math.min(60,+$('v33FreezeSec').value||5));dispatch(c,'v33ModStatus')}));
+ root.querySelectorAll('[data-v33event]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.v33event;const mins=Math.max(1,Math.min(120,+$('v33EventMin').value||5));dispatch('event '+k+' '+mins,'v33EventStatus')}));
+ root.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>dispatch(b.dataset.cmd,'v33CommandStatus')));
+ $('v33AnnBtn').onclick=()=>{const m=String($('v33AnnText').value||'').trim();if(!m)return showStatus('v33CommandStatus','Type an announcement first.');dispatch('announce '+m,'v33CommandStatus')};
+ $('v33GlobalBtn').onclick=()=>{const m=String($('v33AnnText').value||'').trim();if(!m)return showStatus('v33CommandStatus','Type an announcement first.');dispatch('gannounce '+m,'v33CommandStatus')};
+ $('v33LuckBtn').onclick=()=>dispatch('luck '+Math.max(1,Math.min(1000000,+$('v33Luck').value||10))+' '+Math.max(1,Math.min(600,+$('v33LuckMin').value||10)),'v33CommandStatus');
+ $('v33Spawn').onclick=()=>dispatch('spawn '+Math.max(0,+$('v33SpawnId').value||0),'v33EventStatus');
+ $('v33SpawnRandom').onclick=()=>dispatch('spawnrandom '+Math.max(1,Math.min(30,+$('v33SpawnCount').value||5)),'v33EventStatus');
+ $('v33RainBtn').onclick=()=>dispatch('rain '+Math.max(1,+$('v33Rain').value||1000000),'v33EventStatus');
+ $('v33BoomBtn').onclick=()=>dispatch('boom '+Math.max(1,Math.min(100,+$('v33BoomRadius').value||25)),'v33EventStatus');
+ function closePanel(){panel.classList.remove('show');panel.style.setProperty('display','none','important')}
+ function openPanel(){if(!isAdmin()){notify('Admin access requires the Supabase admin role.');return}if(typeof G==='undefined'||!G){notify('Join a server first.');return}panel.classList.add('show');panel.style.setProperty('display','flex','important');goTab('home');syncStats()}
+ function togglePanel(){if(panel.classList.contains('show'))closePanel();else openPanel()}
+ // Replace the dock node so old click handlers cannot toggle the panel twice.
+ const oldButton=dock.querySelector('button');if(oldButton){const b=oldButton.cloneNode(true);b.textContent='👑 ADMIN · P';oldButton.replaceWith(b);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();togglePanel()})}
+ // Capture P before the legacy window-level listener that opens the hidden mini panel.
+ window.addEventListener('keydown',e=>{
+  if(e.code==='KeyP'&&!e.repeat&&!e.target?.matches?.('input,textarea,select,[contenteditable="true"]')){
+   e.preventDefault();e.stopImmediatePropagation();togglePanel();return;
+  }
+  if(e.key==='Escape'&&panel.classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();closePanel()}
+  if(e.code==='Slash'&&!e.target?.matches?.('input,textarea,select,[contenteditable="true"]')){e.preventDefault();e.stopImmediatePropagation()}
+ },true);
+ panel.addEventListener('click',e=>{if(e.target===panel)closePanel()});
+ function syncStats(){
+  const N=window.SASNET,room=!!(N&&N.inRoom&&N.inRoom()),pres=room&&N.pres?N.pres():{},names=Object.values(pres||{}).map(p=>String(p?.n||'Player').replace(/\s+\[.*\]$/,''));
+  $('v33Online').textContent=room?(names.length+' players online'):'Not in an online server';
+  $('v33ServerStatus').textContent=room?'Players: '+(names.join(', ')||'Loading…'):'Join an online server to use server commands.';
+ }
+ setInterval(()=>{if(panel.classList.contains('show'))syncStats();const allowed=isAdmin()&&typeof G!=='undefined'&&!!G;dock.style.setProperty('display',allowed?'block':'none','important');dock.style.setProperty('visibility',allowed?'visible':'hidden','important')},700);
+ // Hide and disable the two legacy controls, including their inline handlers.
+ const legacyCmd=$('cmd'),legacyMini=$('adm');if(legacyCmd){legacyCmd.value='';legacyCmd.style.setProperty('display','none','important');legacyCmd.setAttribute('aria-hidden','true')}if(legacyMini){legacyMini.style.setProperty('display','none','important');legacyMini.setAttribute('aria-hidden','true')}
+ goTab('home');
 })();
 </script>
 
